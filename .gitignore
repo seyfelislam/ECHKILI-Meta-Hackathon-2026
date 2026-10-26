@@ -1,0 +1,37 @@
+# Never publish secrets or account credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.key
+credentials.json
+secrets.json
+
+# Python
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+*.py[cod]
+
+# JavaScript
+node_modules/
+.next/
+dist/
+build/
+coverage/
+
+# Editor and system files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local evidence and data
+private/
+customer-data/
+production-dumps/
+*.sqlite
+*.db
