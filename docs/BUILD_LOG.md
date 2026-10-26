@@ -6,6 +6,7 @@ Only developments made within the event window are eligible to be presented as h
 | --- | --- | --- |
 | 2026-10-26 | Initialized public, separate ECHKILI hackathon repository with a scope statement and submission checklist. | Initial repository commit and subsequent setup commit. |
 | 2026-10-26 | Developed a local-first synthetic evidence lab with evidence-delta comparison, deterministic safety boundaries, and disabled-by-default Meta Standard adapter. | 21 offline Python tests + one Node UI test passed; no real Meta calls or API credits consumed. |
+| 2026-10-26 | Added a measured evaluation dashboard sourced from six fictional fixtures. | 23 Python tests + one JS UI test passed; 0 unsupported source IDs and 0 missed planted contradictions in those fixtures; **not** real diagnostic accuracy. |
 
 ## Update this log for each working milestone
 

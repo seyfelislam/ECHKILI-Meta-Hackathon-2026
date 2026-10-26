@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .cases import public_case
 from .delta import compare
+from .evaluate import run_evaluation
 from .meta_provider import enrich
 from .reasoning import analyze
 
@@ -47,6 +48,8 @@ class DemoHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/api/case":
             return self._json(200, public_case())
+        if self.path == "/api/evaluation":
+            return self._json(200, run_evaluation())
         if self.path in FILES:
             name, content_type = FILES[self.path]
             return self._send(200, (STATIC / name).read_bytes(), content_type)

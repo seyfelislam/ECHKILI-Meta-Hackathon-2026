@@ -45,16 +45,17 @@ class FakeElement {
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 
 test("a second analysis shows what new evidence changed", async () => {
-  const ids = ["case-title", "case-desc", "evidence-list", "selection-count", "analyze-button", "results", "result-mode", "preset-converging", "preset-conflict"];
+  const ids = ["case-title", "case-desc", "evidence-list", "selection-count", "analyze-button", "results", "result-mode", "preset-converging", "preset-conflict", "evaluation-grid"];
   const elements = Object.fromEntries(ids.map((id) => [id, new FakeElement()]));
   elements["analyze-button"].append(new FakeElement("span"));
   const calls = [];
   const scenario = {id: "solar-pump-01", title: "Fixture", description: "Fictional", evidence: ["e1", "e2", "e3", "e4"].map((id) => ({id, title: id, observation: "Fictional observation", source: "Fixture"}))};
   const analysis = {inference: {metaCalled: false}, uncertainty: 0.78, hypotheses: [], contradictions: [], recommendedAction: "TECHNICIAN_REVIEW", limitations: ["Fictional"]};
   const compare = {addedEvidenceIds: ["e4"], removedEvidenceIds: [], introducedHypothesisIds: [], retiredHypothesisIds: ["h-flow"], newContradictions: [["e1", "e4"]], resolvedContradictions: [], uncertaintyDelta: 0.12, actionChange: ["CONTINUE_DIAGNOSIS", "TECHNICIAN_REVIEW"]};
+  const evaluation = {casesEvaluated: 6, unsupportedEvidenceReferences: 0, missedPlantedContradictions: 0, validatesRealWorldDiagnosis: false};
   const fetch = async (path, options) => {
     calls.push({path, payload: options ? JSON.parse(options.body) : null});
-    return {ok: true, json: async () => path === "/api/case" ? scenario : path === "/api/analyze" ? analysis : compare};
+    return {ok: true, json: async () => path === "/api/case" ? scenario : path === "/api/analyze" ? analysis : path === "/api/evaluation" ? evaluation : compare};
   };
   const document = {getElementById: (id) => elements[id], createElement: (tag) => new FakeElement(tag)};
   const script = readFileSync(new URL("../demo/static/app.js", import.meta.url), "utf8");
@@ -73,4 +74,6 @@ test("a second analysis shows what new evidence changed", async () => {
   assert.deepEqual(difference.payload.beforeIds, ["e1", "e2"]);
   assert.deepEqual(difference.payload.afterIds, ["e1", "e2", "e4"]);
   assert.equal(elements.results.children[0].children[0].textContent, "EVIDENCE DELTA · PREVIOUS RUN");
+  assert.ok(calls.some((call) => call.path === "/api/evaluation"), "metrics must come from executable fixture checks");
+  assert.equal(elements["evaluation-grid"].children.length, 3, "three measured control cards should render");
 });

@@ -161,7 +161,29 @@ async function init() {
   }
 }
 
+async function loadEvaluation() {
+  const grid = document.getElementById("evaluation-grid");
+  try {
+    const response = await fetch("/api/evaluation");
+    if (!response.ok) return;
+    const data = await response.json();
+    const values = [
+      [data.casesEvaluated, "Synthetic fixtures"],
+      [data.unsupportedEvidenceReferences, "Unsupported source IDs"],
+      [data.missedPlantedContradictions, "Missed planted conflicts"],
+    ];
+    for (const [value, label] of values) {
+      const card = element("div", "metric-tile");
+      card.append(element("span", "metric-value", String(value)), element("span", "metric-label", label));
+      grid.append(card);
+    }
+  } catch (_) {
+    grid.replaceChildren(element("p", "result-desc", "Offline fixture metrics unavailable."));
+  }
+}
+
 document.getElementById("preset-converging").addEventListener("click", () => selectPreset(["e1", "e2", "e3"]));
 document.getElementById("preset-conflict").addEventListener("click", () => selectPreset(["e1", "e4"]));
 nodes.analyze.addEventListener("click", runAnalysis);
 init();
+loadEvaluation();

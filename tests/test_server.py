@@ -58,6 +58,14 @@ class DemoHTTPTests(unittest.TestCase):
         self.assertEqual(data["retiredHypothesisIds"], ["h-flow"])
         self.assertEqual(data["addedEvidenceIds"], ["e4"])
 
+    def test_metrics_are_labeled_synthetic_not_accurate_diagnosis(self):
+        response, raw = self.fetch("/api/evaluation")
+        data = json.loads(raw)
+        self.assertEqual(response.status, 200)
+        self.assertEqual(data["casesEvaluated"], 6)
+        self.assertFalse(data["validatesRealWorldDiagnosis"])
+        self.assertEqual(data["metaApiCalls"], 0)
+
     def test_static_assets_and_no_traversal(self):
         for path in ("/", "/styles.css", "/app.js"):
             response, body = self.fetch(path)
