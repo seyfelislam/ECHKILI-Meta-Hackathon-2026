@@ -12,6 +12,7 @@ from collections import Counter
 
 from demo.cases import CASE
 from demo.reasoning import analyze
+from demo.trace import compare
 
 
 def evaluate() -> dict:
@@ -53,10 +54,42 @@ def evaluate() -> dict:
             "recommendedAction": result["recommendedAction"],
             "passed": safe,
         })
+    # One newly supplied observation can change a conclusion, or introduce a conflict.
+    # Exhausting all such directed additions (4 * 2^3 = 32) also verifies that a
+    # previously mandated technician review never gets downgraded by adding evidence.
+    transitions = Counter()
+    for mask in itertools.product((False, True), repeat=len(ids)):
+        before = [item for item, on in zip(ids, mask) if on]
+        for added in ids:
+            if added in before:
+                continue
+            updated = [*before, added]
+            trace = compare(CASE["id"], before, updated)
+            changes = trace["changes"]
+            audit_pass = (
+                changes["addedEvidenceIds"] == [added]
+                and not changes["removedEvidenceIds"]
+                and not trace["inference"]["metaCalled"]
+                and (changes["beforeAction"] != "TECHNICIAN_REVIEW"
+                     or changes["afterAction"] == "TECHNICIAN_REVIEW")
+                and (not changes["newContradictions"]
+                     or (changes["humanReviewEscalated"]
+                         and changes["afterAction"] == "TECHNICIAN_REVIEW"
+                         and changes["uncertaintyDelta"] >= 0))
+            )
+            transitions["total"] += 1
+            transitions["audit_pass"] += int(audit_pass)
+            transitions["new_conflict_escalations"] += int(bool(changes["newContradictions"]))
+            transitions["withdrawn_hypothesis_events"] += int(bool(changes["withdrawnHypothesisIds"]))
+            if not audit_pass:
+                failures.append({"beforeEvidenceIds": before, "addedEvidenceId": added,
+                                 "reason": "transition audit violation"})
+
     return {
-        "benchmark": "fictional-evidence-contract-v1",
+        "benchmark": "fictional-evidence-contract-v2",
         "scope": "All 16 subsets of four invented observations; rules are evaluated against their own stated contract, not real faults.",
         "metrics": dict(outcomes),
+        "transitionMetrics": dict(transitions),
         "failures": failures,
         "cases": cases,
         "interpretation": "PASS verifies deterministic invariants only. It is not diagnostic accuracy or Meta model effectiveness.",

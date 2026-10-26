@@ -9,6 +9,7 @@ from pathlib import Path
 from .cases import public_case
 from .meta_provider import enrich
 from .reasoning import analyze
+from .trace import compare
 
 STATIC = Path(__file__).resolve().parent / "static"
 FILES = {
@@ -52,7 +53,7 @@ class DemoHandler(BaseHTTPRequestHandler):
         return self._json(404, {"error": "Not found"})
 
     def do_POST(self):
-        if self.path != "/api/analyze":
+        if self.path not in {"/api/analyze", "/api/trace"}:
             return self._json(404, {"error": "Not found"})
         if self.headers.get("Content-Type", "").split(";")[0].strip().lower() != "application/json":
             return self._json(415, {"error": "Expected application/json"})
@@ -61,12 +62,20 @@ class DemoHandler(BaseHTTPRequestHandler):
             if not 1 <= length <= MAX_BODY:
                 return self._json(413, {"error": "Request body out of bounds"})
             body = json.loads(self.rfile.read(length))
-            if not isinstance(body, dict) or set(body) != {"caseId", "evidenceIds"}:
-                raise ValueError("Unsupported request fields")
-            result = analyze(body["caseId"], body["evidenceIds"])
+            if not isinstance(body, dict):
+                raise ValueError("Expected a JSON object")
+            if self.path == "/api/trace":
+                if set(body) != {"caseId", "beforeEvidenceIds", "afterEvidenceIds"}:
+                    raise ValueError("Unsupported trace fields")
+                result = compare(body["caseId"], body["beforeEvidenceIds"], body["afterEvidenceIds"])
+            else:
+                if set(body) != {"caseId", "evidenceIds"}:
+                    raise ValueError("Unsupported request fields")
+                result = analyze(body["caseId"], body["evidenceIds"])
         except (ValueError, TypeError, KeyError, UnicodeDecodeError, json.JSONDecodeError):
             return self._json(400, {"error": "Invalid synthetic case or evidence IDs"})
-        result = enrich({"id": "cabin-climate-01", "synthetic": True}, result)
+        if self.path == "/api/analyze":
+            result = enrich({"id": "cabin-climate-01", "synthetic": True}, result)
         return self._json(200, result)
 
 
