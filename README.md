@@ -32,11 +32,14 @@ Try:
 3. Switch between the two presets and analyze again to see the evidence-delta trace.
 4. Deselect everything to see the demo decline to infer a diagnosis.
 
-## Test
+## Reproducible tests and evaluation
 
 ```bash
 python -m unittest discover -s tests -v
+python -m evaluation.benchmark
 ```
+
+The benchmark exhausts all 16 subsets of the **four fictional** observations and checks provenance, conflict escalation, and abstention. These are software-contract checks; they do **not** measure diagnostic accuracy, model quality, or business impact. See [judging scorecard](docs/JUDGING_SCORECARD.md).
 
 No model calls are made during tests. Integration tests only use a local loopback HTTP server.
 

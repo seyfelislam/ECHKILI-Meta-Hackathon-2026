@@ -24,6 +24,8 @@ def _ready(case: dict, result: dict) -> bool:
         and result.get("caseId") == "cabin-climate-01"
         and result.get("synthetic") is True
         and result.get("inference", {}).get("mode") == "deterministic-offline-demo"
+        and not result.get("contradictions")
+        and result.get("recommendedAction") == "CONTINUE_DIAGNOSIS"
         and os.environ.get("ECHKILI_META_ENABLED") == "true"
         and os.environ.get("ECHKILI_META_CREDITS_CONFIRMED") == "true"
         and os.environ.get("ECHKILI_META_APPROVED_CASE") == "cabin-climate-01"

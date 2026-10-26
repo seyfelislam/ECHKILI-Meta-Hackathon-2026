@@ -1,45 +1,33 @@
-# Ten-day sprint — October 26 to November 4, 2026
+# October 26 – November 4, 2026: ten-day execution plan
 
-**Goal:** a reproducible, original, safe, visibly working *ECHKILI Evidence Lab* with credible use of a Meta AI model by final submission, ideally demonstrating hypotheses that change when evidence contradicts itself. Winning is a goal, not a promise.
+**Working objective:** a reproducible, original, safe ECHKILI Evidence Lab demonstration that is genuinely enhanced by an eligible Meta model (if access is verified), with the biggest wins coming from real product value rather than a generic chatbot. The human entrant alone is responsible for submitting the entry and meeting the event's eligibility rules.
 
-## Judge-facing proposition
+The judge-facing themes are **Build for Your World** (primary) and the *technical* possibilities of **Push the Frontier** (only when supported by evidence). Because ECHKILI has not yet been legally registered as a company, treat **Indie** as the initial track candidate until the organizer confirms an alternative. Official eligibility and minimum-age rules must be checked before submitting.
 
-> Most AI assistants answer despite incomplete or contradictory observations. ECHKILI Evidence Lab forces evidence-to-hypothesis traceability, flags contradictions, and preserves human review instead of presenting polished certainty.
+| Day (Algeria) | Main priority | Testable milestone | Completion criterion |
+| --- | --- | --- | --- |
+| Oct 26 | Public, IP-safe foundation | Runnable synthetic browser demo; public code, evaluation scorecard | Offline tests run, no proprietary code, reproducible local execution |
+| Oct 27 | User experience and outcome | Guided story: converging → conflicting evidence and revised reasoning | Judge can show and explain before/after change in under 45 seconds |
+| Oct 28 | Broader synthetic reliability | 20+ invented test cases for missing/conflicting/spurious evidence | Automated assertions for citation correctness and safe abstention |
+| Oct 29 | Meta integration validation | Confirm endpoint/model schema; explicit safe Standard adapter, parser and mocked failures | Model JSON parser tests; no secrets, off by default |
+| Oct 30 | Impact assessment | Run a small, consented evaluation with sample users and note genuine observations | Measured comprehension and meaningful caveats, no invented metrics |
+| Oct 31 | Real Meta experiment **only if cleared** | Single billed-account-confirmed synthetic call and documented cost | Real provider attribution, no unsafe inference, no surprise spending |
+| Nov 1 | Robustness | Edge cases, responsiveness, keyboard controls, accessibility, malicious inputs | No broken flows, fail closed on malformed input |
+| Nov 2 | Shareable demonstration | Safe public deployment or reproducible self-hosted recording, readme and offline fallback | Fresh-device demo and incognito GitHub access |
+| Nov 3 | Jury communication | Three-minute video of actual running product | Every claim is verifiable; Meta contribution explicit and truthful |
+| Nov 4 | Eligibility, rights and submission | Rights/privacy audit, final track confirmation, video + repo + official portal submission | Receipt before Nov 4, 9 PM ET (**Nov 5, 03:00 Algeria**) |
 
-Theme candidate: **Build for Your World**. Track candidate: **Indie developer**, unless organizer confirms an unregistered founder can enter Startup. AI assistance does not count as another human participant. Verify official rules and exact event criteria before final submission.
+## Prioritization under time pressure
 
-| Date | Priority | Concrete deliverable | Acceptance evidence |
-|---|---|---|---|
-| Oct 26 — Day 1 | Scope and IP boundary | Public, isolated repository; runnable synthetic demo; baseline guardrails | Clean-room source review; offline tests pass |
-| Oct 27 — Day 2 | Interaction | Show before-and-after evidence deltas and human-review state | Recorded scenario with/without a contradiction |
-| Oct 28 — Day 3 | Reasoning reliability | Add test cases: contradictory, insufficient, duplicate, spurious evidence | Assertions for abstention, provenance and decision preservation |
-| Oct 29 — Day 4 | Meta adapter | Confirm model IDs and required request/response fields; strict mock parsing | Mock transport tests, no live calls or secrets |
-| Oct 30 — Day 5 | Evaluation | Create synthetic evaluation matrix with expected trace IDs and unsafe-output cases | Repeatable tests and baseline measurement |
-| Oct 31 — Day 6 | Controlled Meta test | **Only if credit confirmed:** single, server-side Standard model call against a fictional case | Document actual provider, response behavior, approximate cost; otherwise keep blocked |
-| Nov 1 — Day 7 | Robustness | Tighten unknown-input handling, user feedback and accessibility | Manual UI walkthrough and security regression tests |
-| Nov 2 — Day 8 | Reproducibility | Package quickstart; evaluate safe shareable deployment and verify anonymous access | Fresh-clone run and public GitHub access |
-| Nov 3 — Day 9 | Demo story | Record a real 3-minute walkthrough (not slides) showing the evidence update | Video can be viewed by the jury; all claims reproducible |
-| Nov 4 — Day 10 | Submission | Verify track, eligibility, links, license/IP review, model usage, deadline | Official portal confirms submission before 9 PM US ET |
+1. **Must ship:** evidence trace, contradiction revision, human review, runnable UI, tests, documented use of Meta.
+2. **Strong differentiator:** automated synthetic benchmark; transparent model-vs-rule provenance; user impact observation.
+3. **Only if time remains:** additional supported fictional subsystems, optional language accessibility, optional visualization.
+4. **Do not spend time on:** a second independent platform, proprietary-data ingestion, 3D polish before model value, or premature production rollout.
 
-## Non-negotiable boundaries
+## Evidence and privacy boundaries
 
-- Main ECHKILI commercial code, manuals, internal documents, customer data, vehicle-identifying information, credentials, and proprietary fixtures **must not** enter this public repository.
-- No claim of using Meta live until a recorded real provider call has happened.
-- No real-world repair instructions, diagnosis certifications or automated safety clearance.
-- Fail closed when the provider is unavailable, invalid, or gated off.
-- Do not confuse a provider **usage alert** with a hard spending cap.
-- No secrets in screenshots, videos, commit history, or browser bundles.
+No private ECHKILI source, customer information, OEM manuals, actual VINs, repair/safety-clearance instructions, API keys, or real-user telemetry. A participant in user research must never be asked to attempt a real-world mechanical procedure. Live Meta access stays off until the promo credit and billing are verified; a spend alert is not a hard cap.
 
-## Minimum measurable judging package
+## Failure fallback
 
-1. Working local prototype with one believable *fictional* vehicle-cabin issue.
-2. Contradiction handling demonstrably changes both hypotheses and human-review status.
-3. At least 20 synthetic automated tests plus manual UI checks by submission.
-4. Clearly isolated actual Meta inference with strict evidence references, subject to credit verification.
-5. Reproducible quickstart, 3-minute demo, dated changelog, public repository link.
-
-## Contingencies
-
-- Credits not active: continue fully offline and investigate an **official, authorized Meta AI** alternative; do not silently claim mock output as a Meta demonstration. Actual eligible Meta model use is essential for judging.
-- Uncertain ownership/patent disclosure: narrow public demo, do not publish protected implementation.
-- API outages: preserve verified deterministic baseline and disclose limitations.
+If model access fails, the transparent local demo still works, but it must explicitly say **Meta not called**. Such a demonstration does not satisfy a goal of proving effective live Meta-tool use. Contact organizers through their official channels for eligible alternatives rather than representing a mock as a real call.

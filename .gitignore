@@ -1,4 +1,4 @@
-# Never publish secrets or account credentials
+# Secrets and credentials
 .env
 .env.*
 !.env.example
@@ -8,28 +8,25 @@
 credentials.json
 secrets.json
 
-# Python
+# Runtime and test artifacts
 __pycache__/
+*.py[cod]
 .pytest_cache/
 .ruff_cache/
 .venv/
 venv/
-*.py[cod]
-
-# JavaScript
+.coverage
+coverage/
 node_modules/
-.next/
 dist/
 build/
-coverage/
-
-# Editor and system files
+.next/
 .DS_Store
 .idea/
 .vscode/
 *.swp
 
-# Local evidence and data
+# Never publish actual records or commercial materials
 private/
 customer-data/
 production-dumps/

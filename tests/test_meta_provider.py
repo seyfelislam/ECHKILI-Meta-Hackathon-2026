@@ -71,6 +71,18 @@ class MetaProviderTests(unittest.TestCase):
             self.assertEqual(result, self.base)
             send.assert_not_called()
 
+    def test_conflicting_observations_never_trigger_meta_call(self):
+        conflict = analyze("cabin-climate-01", ["e1", "e2", "e4"])
+        with patch.dict(os.environ, self.flags), patch("demo.meta_provider._request_json") as send:
+            self.assertEqual(enrich(self.case, conflict), conflict)
+            send.assert_not_called()
+
+    def test_empty_observations_never_trigger_meta_call(self):
+        empty = analyze("cabin-climate-01", [])
+        with patch.dict(os.environ, self.flags), patch("demo.meta_provider._request_json") as send:
+            self.assertEqual(enrich(self.case, empty), empty)
+            send.assert_not_called()
+
     def test_single_attempt_per_process(self):
         with patch.dict(os.environ, self.flags), patch("demo.meta_provider._request_json", return_value=_response()) as send:
             enrich(self.case, copy.deepcopy(self.base))

@@ -1,4 +1,4 @@
-name: Evidence Lab offline tests
+name: Offline evidence contracts
 on:
   push:
     branches: [main]
@@ -6,17 +6,24 @@ on:
 permissions:
   contents: read
 jobs:
-  offline-tests:
+  verify:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Compile source
-        run: python -m compileall -q demo tests
-      - name: Run all offline unit and loopback tests
+      - name: Compile public demo
+        run: python -m compileall -q demo evaluation tests
+      - name: Offline unit and HTTP tests
+        env:
+          ECHKILI_META_ENABLED: 'false'
+          ECHKILI_META_CREDITS_CONFIRMED: 'false'
+          ECHKILI_META_MAX_CALLS_PER_PROCESS: '0'
         run: python -m unittest discover -s tests -v
+      - name: Exhaustive fictional evidence benchmark
+        run: python -m evaluation.benchmark > /tmp/benchmark.json
       - name: Check browser script syntax
         run: node --check demo/static/app.js
