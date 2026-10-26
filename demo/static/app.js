@@ -11,6 +11,7 @@ const nodes = {
 };
 let scenario = null;
 let busy = false;
+let previousSelection = null;
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -91,19 +92,49 @@ function renderResult(data) {
   ]));
 }
 
+function renderDelta(delta) {
+  const details = [];
+  if (delta.addedEvidenceIds.length) details.push(`Added evidence: ${delta.addedEvidenceIds.join(", ")}.`);
+  if (delta.removedEvidenceIds.length) details.push(`Removed evidence: ${delta.removedEvidenceIds.join(", ")}.`);
+  if (delta.introducedHypothesisIds.length) details.push(`New provisional hypotheses: ${delta.introducedHypothesisIds.join(", ")}.`);
+  if (delta.retiredHypothesisIds.length) details.push(`No longer supported: ${delta.retiredHypothesisIds.join(", ")}.`);
+  if (delta.newContradictions.length) details.push(`${delta.newContradictions.length} new contradiction(s) detected.`);
+  if (delta.resolvedContradictions.length) details.push(`${delta.resolvedContradictions.length} contradiction(s) resolved.`);
+  if (delta.actionChange) details.push(`Review decision changed to ${delta.actionChange[1].replaceAll("_", " ")}.`);
+  const change = Math.round(delta.uncertaintyDelta * 100);
+  details.push(`Illustrative uncertainty ${change > 0 ? "increased" : change < 0 ? "decreased" : "stayed unchanged"}${change !== 0 ? ` by ${Math.abs(change)} points` : ""}.`);
+  nodes.results.prepend(block("EVIDENCE DELTA · PREVIOUS RUN", [
+    finding("What changed after the new evidence?", details.join(" "), delta.addedEvidenceIds.concat(delta.removedEvidenceIds)),
+  ]));
+}
+
 async function runAnalysis() {
   if (!scenario || busy) return;
   busy = true;
   refreshCount();
+  const currentSelection = selectedIds();
   nodes.analyze.querySelector("span").textContent = "Analyzing…";
   try {
     const response = await fetch("/api/analyze", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({caseId: scenario.id, evidenceIds: selectedIds()}),
+      body: JSON.stringify({caseId: scenario.id, evidenceIds: currentSelection}),
     });
     if (!response.ok) throw new Error(`Analysis unavailable (${response.status})`);
     renderResult(await response.json());
+    if (previousSelection !== null) {
+      try {
+        const comparison = await fetch("/api/compare", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({caseId: scenario.id, beforeIds: previousSelection, afterIds: currentSelection}),
+        });
+        if (comparison.ok) renderDelta(await comparison.json());
+      } catch (_) {
+        // The current analysis remains usable even if comparison fails.
+      }
+    }
+    previousSelection = currentSelection;
   } catch (error) {
     nodes.results.replaceChildren(finding("Analysis unavailable", error.message, []));
     nodes.mode.textContent = "ERROR";

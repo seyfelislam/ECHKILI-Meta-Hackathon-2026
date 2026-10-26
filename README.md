@@ -27,7 +27,7 @@ Requires Python 3.10+ and no third-party packages. From the repository root:
 python -m demo.server
 ```
 
-Open `http://127.0.0.1:8765`. Use **Try supporting evidence** and **Try a contradiction** to show the difference. Run offline tests with `python -m unittest discover -s tests -v`. The server binds to loopback by default.
+Open `http://127.0.0.1:8765`. Use **Try supporting evidence** and **Try a contradiction** to show the difference. Run offline tests with `python -m unittest discover -s tests -v` and `node tests/test_ui.mjs`. Re-run analysis after changing evidence to see the **evidence delta** for hypotheses, contradictions, uncertainty and safety decisions. The server binds to loopback by default.
 
 The `demo/meta_provider.py` integration uses **Muse Spark 1.3 Standard** only when independent environment gates are explicitly activated. It has not made a real API request; see [Meta setup](docs/META_SETUP.md).
 

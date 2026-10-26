@@ -47,6 +47,17 @@ class DemoHTTPTests(unittest.TestCase):
             self.fetch("/api/analyze", {"caseId": "solar-pump-01", "evidenceIds": [], "token": "hello"})
         self.assertEqual(raised.exception.code, 400)
 
+    def test_compare_exposes_evidence_changes(self):
+        response, raw = self.fetch("/api/compare", {
+            "caseId": "solar-pump-01",
+            "beforeIds": ["e1", "e2"],
+            "afterIds": ["e1", "e2", "e4"],
+        })
+        data = json.loads(raw)
+        self.assertEqual(response.status, 200)
+        self.assertEqual(data["retiredHypothesisIds"], ["h-flow"])
+        self.assertEqual(data["addedEvidenceIds"], ["e4"])
+
     def test_static_assets_and_no_traversal(self):
         for path in ("/", "/styles.css", "/app.js"):
             response, body = self.fetch(path)

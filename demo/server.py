@@ -7,6 +7,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from .cases import public_case
+from .delta import compare
 from .meta_provider import enrich
 from .reasoning import analyze
 
@@ -52,7 +53,7 @@ class DemoHandler(BaseHTTPRequestHandler):
         return self._json(404, {"error": "Not found"})
 
     def do_POST(self):
-        if self.path != "/api/analyze":
+        if self.path not in {"/api/analyze", "/api/compare"}:
             return self._json(404, {"error": "Not found"})
         if self.headers.get("Content-Type", "").split(";")[0].strip().lower() != "application/json":
             return self._json(415, {"error": "Expected application/json"})
@@ -61,12 +62,17 @@ class DemoHandler(BaseHTTPRequestHandler):
             if not 1 <= length <= MAX_BODY:
                 return self._json(413, {"error": "Request body out of bounds"})
             body = json.loads(self.rfile.read(length))
-            if not isinstance(body, dict) or set(body) != {"caseId", "evidenceIds"}:
+            expected = {"caseId", "evidenceIds"} if self.path == "/api/analyze" else {"caseId", "beforeIds", "afterIds"}
+            if not isinstance(body, dict) or set(body) != expected:
                 raise ValueError("Unsupported request fields")
-            result = analyze(body["caseId"], body["evidenceIds"])
+            if self.path == "/api/compare":
+                result = compare(body["caseId"], body["beforeIds"], body["afterIds"])
+            else:
+                result = analyze(body["caseId"], body["evidenceIds"])
         except (ValueError, TypeError, KeyError, UnicodeDecodeError, json.JSONDecodeError):
             return self._json(400, {"error": "Invalid synthetic case or evidence IDs"})
-        result = enrich({"id": "solar-pump-01", "synthetic": True}, result)
+        if self.path == "/api/analyze":
+            result = enrich({"id": "solar-pump-01", "synthetic": True}, result)
         return self._json(200, result)
 
 
