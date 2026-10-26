@@ -17,7 +17,19 @@ We intend to demonstrate:
 3. Competing provisional hypotheses, contradictions, and clear follow-up checks.
 4. A reproducible demonstration of what changed when new evidence was provided.
 
-**These are planned deliverables, not claims of finished functionality.** Progress and scope are tracked in [the build log](docs/BUILD_LOG.md), the [10-day sprint plan](docs/TEN_DAY_SPRINT.md), and the [Meta API setup checklist](docs/META_SETUP.md).
+**Local demonstration implemented; remote Meta inference remains disabled until the account credits and key are verified.** Progress and scope are tracked in [the build log](docs/BUILD_LOG.md), the [10-day sprint plan](docs/TEN_DAY_SPRINT.md), and the [Meta API setup checklist](docs/META_SETUP.md).
+
+## Run the synthetic prototype
+
+Requires Python 3.10+ and no third-party packages. From the repository root:
+
+```bash
+python -m demo.server
+```
+
+Open `http://127.0.0.1:8765`. Use **Try supporting evidence** and **Try a contradiction** to show the difference. Run offline tests with `python -m unittest discover -s tests -v`. The server binds to loopback by default.
+
+The `demo/meta_provider.py` integration uses **Muse Spark 1.3 Standard** only when independent environment gates are explicitly activated. It has not made a real API request; see [Meta setup](docs/META_SETUP.md).
 
 ## Project boundaries
 
