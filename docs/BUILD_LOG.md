@@ -9,3 +9,5 @@ This log records only what was actually completed. Update it per commit with tes
 **Public repository principle:** all source here is independent demonstration code. The commercially sensitive ECHKILI product implementation remains in its separate private repository.
 
 | 2026-10-26 | **25 local tests passing** | Offline 16-combination contract benchmark passed (16/16 traceability + contradiction gates); blocked Meta when evidence conflicts or is absent; CI workflow added. No model inference or spend. |
+
+| 2026-10-26 | **Guided evidence journey (local)** | Added `/api/trace` server-audited before/after comparisons, three-step browser story and tests for 32 one-evidence transitions. No Meta request, no paid call, no external data. |

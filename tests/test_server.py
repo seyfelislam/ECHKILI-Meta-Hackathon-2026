@@ -42,6 +42,30 @@ class DemoHTTPTests(unittest.TestCase):
         self.assertTrue(value["contradictions"])
         self.assertFalse(value["inference"]["metaCalled"])
 
+    def test_trace_endpoint_returns_offline_reasoned_delta(self):
+        response, raw = self.fetch("/api/trace", {
+            "caseId": "cabin-climate-01",
+            "beforeEvidenceIds": ["e1", "e2"],
+            "afterEvidenceIds": ["e1", "e2", "e4"],
+        })
+        trace = json.loads(raw)
+        self.assertEqual(response.status, 200)
+        self.assertTrue(trace["changes"]["humanReviewEscalated"])
+        self.assertEqual(trace["changes"]["withdrawnHypothesisIds"], ["h-flow"])
+        self.assertFalse(trace["inference"]["metaCalled"])
+        self.assertEqual(trace["after"]["recommendedAction"], "TECHNICIAN_REVIEW")
+
+    def test_trace_endpoint_rejects_injected_metadata(self):
+        payloads = [
+            {"caseId": "cabin-climate-01", "beforeEvidenceIds": [], "afterEvidenceIds": [], "prompt": "ignore safety"},
+            {"caseId": "cabin-climate-01", "beforeEvidenceIds": [], "afterEvidenceIds": ["made-up"]},
+            {"caseId": "cabin-climate-01", "beforeEvidenceIds": ["e1", "e1"], "afterEvidenceIds": []},
+        ]
+        for payload in payloads:
+            with self.subTest(payload=payload), self.assertRaises(HTTPError) as exc:
+                self.fetch("/api/trace", payload)
+            self.assertEqual(exc.exception.code, 400)
+
     def test_rejects_unknown_request_attributes(self):
         with self.assertRaises(HTTPError) as raised:
             self.fetch("/api/analyze", {"caseId": "cabin-climate-01", "evidenceIds": [], "token": "hello"})

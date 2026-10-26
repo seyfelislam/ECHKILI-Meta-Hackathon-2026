@@ -15,6 +15,7 @@ The four percentages below are described in the event waiver and reported in thi
 
 **Gate A — deterministic behavior** (ready for repeatable demonstration):
 - All 16 evidence subsets must preserve valid provenance and safe human-review decisions.
+- All 32 one-observation additions must correctly audit changes, preserve existing human-review escalation, and never generate a model request.
 - Every hypothesis must point to an actually selected evidence ID.
 - Selecting contradictory `e1` and `e4` must produce a conflict and `TECHNICIAN_REVIEW`.
 - No selected evidence should yield no specific diagnosis.
@@ -38,7 +39,7 @@ The four percentages below are described in the event waiver and reported in thi
 
 ## Current measured data
 
-`python -m evaluation.benchmark` exhaustively runs 16 synthetic input combinations. Its metrics are **software-contract checks only**, not predictive performance. Run `python -m unittest discover -s tests -v` for the independent unit/integration suite.
+`python -m evaluation.benchmark` exhaustively runs 16 synthetic input combinations and 32 directed single-evidence transitions. Its metrics are **software-contract checks only**, not predictive performance. Run `python -m unittest discover -s tests -v` for the independent unit/integration suite.
 
 ## Avoid overclaiming
 

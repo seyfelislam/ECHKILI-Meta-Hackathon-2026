@@ -27,6 +27,12 @@ class BenchmarkTests(unittest.TestCase):
     def test_abstains_without_evidence(self):
         self.assertEqual(self.report["metrics"]["empty_input_abstentions"], 1)
 
+    def test_all_32_one_step_transitions(self):
+        self.assertEqual(self.report["transitionMetrics"]["total"], 32)
+        self.assertEqual(self.report["transitionMetrics"]["audit_pass"], 32)
+        self.assertEqual(self.report["transitionMetrics"]["new_conflict_escalations"], 8)
+        self.assertGreater(self.report["transitionMetrics"]["withdrawn_hypothesis_events"], 0)
+
     def test_has_no_contract_failures(self):
         self.assertFalse(self.report["failures"])
         self.assertEqual(self.report["metrics"]["contract_pass"], 16)

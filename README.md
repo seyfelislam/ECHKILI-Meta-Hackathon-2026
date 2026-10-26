@@ -9,7 +9,8 @@ An **offline-first, intentionally limited fictional vehicle-cabin diagnostics de
 - Selecting simulated observations from distinct sources.
 - Traceability: each proposed explanation links to the evidence that supports it.
 - Explicit contradiction detection and cautious human review.
-- A visible **before/after evidence update** when the selected records change between analyses.
+- A server-audited **before/after evidence trace** that explicitly names new evidence, newly surfaced conflicts, and withdrawn hypotheses.
+- A **three-step judge demo** (initial observations → corroboration → conflicting report and human review), with no Meta requests.
 - An always-visible uncertainty indicator (illustrative, **not** calibrated).
 - A separate, optional Meta Model API enrichment path that is **disabled by default**.
 
@@ -27,10 +28,12 @@ Open **http://127.0.0.1:8765** on the same machine. The server refuses non-loopb
 
 Try:
 
-1. **Try supporting evidence** to see tentative, referenced explanations.
-2. **Try a contradiction** to see incompatible observations and mandatory human review.
-3. Switch between the two presets and analyze again to see the evidence-delta trace.
+1. Click **Start guided demonstration** to run an auditable, three-step fictional story. Use **Next evidence step** twice, then **Replay** to restart.
+2. Observe a tentative `h-flow` hypothesis; later add a new report that conflicts with `e1`. The previously surfaced `h-flow` explanation is **withdrawn**, uncertainty rises, and the system requires qualified review.
+3. To explore manually, use **Try supporting evidence** or **Try a contradiction**, then click **Analyze selected evidence**.
 4. Deselect everything to see the demo decline to infer a diagnosis.
+
+The guided comparison calls `/api/trace` and **never sends a Meta API request**. Manual `/api/analyze` also stays offline unless the explicit server-only opt-ins are enabled.
 
 ## Reproducible tests and evaluation
 
@@ -39,7 +42,7 @@ python -m unittest discover -s tests -v
 python -m evaluation.benchmark
 ```
 
-The benchmark exhausts all 16 subsets of the **four fictional** observations and checks provenance, conflict escalation, and abstention. These are software-contract checks; they do **not** measure diagnostic accuracy, model quality, or business impact. See [judging scorecard](docs/JUDGING_SCORECARD.md).
+The benchmark exhausts all 16 subsets of the **four fictional** observations plus all **32 directed one-evidence additions**, checking provenance, conflict escalation, abstention, and stable human-review safeguards. These are software-contract checks; they do **not** measure diagnostic accuracy, model quality, or business impact. See [judging scorecard](docs/JUDGING_SCORECARD.md).
 
 No model calls are made during tests. Integration tests only use a local loopback HTTP server.
 
@@ -62,7 +65,7 @@ Untrusted model text is accepted only as a small number of provisional labels re
 ## Technical boundary
 
 - Python standard-library HTTP server bound to loopback.
-- Exact static route allowlist and input/body-size validation.
+- Exact static route allowlist and input/body-size validation; `/api/trace` refuses arbitrary metadata and recomputes results from allowlisted identifiers.
 - No external dependencies, cookies, storage, log analytics, or customer accounts.
 - Content-Security-Policy, no-store, clickjacking protection.
 - UI inserts text as text nodes rather than HTML.

@@ -8,7 +8,15 @@ const nodes = {
   analyze: document.getElementById("analyze-button"),
   results: document.getElementById("results"),
   mode: document.getElementById("result-mode"),
+  storyButton: document.getElementById("story-button"),
+  storyProgress: document.getElementById("story-progress"),
 };
+const STORY = [
+  {name: "Initial evidence", ids: ["e1", "e2"], aim: "First evidence-linked possibility"},
+  {name: "New supporting record", ids: ["e1", "e2", "e3"], aim: "A second provisional explanation appears"},
+  {name: "Conflicting report", ids: ["e1", "e2", "e3", "e4"], aim: "Withdraw the affected explanation; require review"},
+];
+let storyIndex = -1;
 let scenario = null;
 let busy = false;
 let previousResult = null;
@@ -28,6 +36,7 @@ function refreshCount() {
   const n = selectedIds().length;
   nodes.count.textContent = `${n} of ${scenario?.evidence.length ?? 0} observations selected · Fictional scenario only`;
   nodes.analyze.disabled = !scenario || busy;
+  nodes.storyButton.disabled = !scenario || busy;
 }
 
 function createEvidence(item) {
@@ -45,10 +54,27 @@ function createEvidence(item) {
   return label;
 }
 
-function selectPreset(ids) {
+function setSelection(ids) {
   for (const input of nodes.evidenceList.querySelectorAll("input")) input.checked = ids.includes(input.value);
   refreshCount();
+}
+
+function selectPreset(ids) {
+  storyIndex = -1;
+  updateStoryLabel();
+  setSelection(ids);
   nodes.analyze.focus();
+}
+
+function updateStoryLabel() {
+  if (storyIndex === -1) {
+    nodes.storyProgress.textContent = "Ready: supporting evidence → corroboration → contradiction & human review";
+    nodes.storyButton.firstChild.textContent = "Start guided demonstration ";
+  } else {
+    const active = STORY[storyIndex];
+    nodes.storyProgress.textContent = `Step ${storyIndex + 1}/3: ${active.name} — ${active.aim}. Offline comparison; no Meta call.`;
+    nodes.storyButton.firstChild.textContent = storyIndex === STORY.length - 1 ? "Replay guided demonstration " : "Next evidence step ";
+  }
 }
 
 function block(label, children) {
@@ -65,7 +91,7 @@ function finding(title, description, refs, warning = false) {
   return div;
 }
 
-function renderResult(data) {
+function renderResult(data, comparison = null) {
   nodes.results.replaceChildren();
   if (previousResult) {
     const previousIds = new Set(previousResult.selectedEvidence.map((item) => item.id));
@@ -78,12 +104,15 @@ function renderResult(data) {
     const disappeared = [...previousHypotheses].filter((id) => !currentHypotheses.has(id));
     const newConflicts = data.contradictions.length - previousResult.contradictions.length;
     if (added.length || removed.length || appeared.length || disappeared.length || newConflicts) {
+      const backed = comparison && Array.isArray(comparison.addedEvidenceIds);
+      const source = backed ? "SERVER-VERIFIED OFFLINE TRACE" : "LOCAL VIEW COMPARISON";
       const changed = finding(
         "What changed after new evidence?",
         `Added: ${added.join(", ") || "none"}. Removed: ${removed.join(", ") || "none"}. ` +
         `New explanations: ${appeared.length}; withdrawn explanations: ${disappeared.length}. ` +
         `Contradiction change: ${newConflicts > 0 ? "+" : ""}${newConflicts}. ` +
-        `Illustrative uncertainty: ${Math.round(previousResult.uncertainty * 100)}% → ${Math.round(data.uncertainty * 100)}%.`,
+        `Illustrative uncertainty: ${Math.round(previousResult.uncertainty * 100)}% → ${Math.round(data.uncertainty * 100)}%. ` +
+        `${source}.`,
         added,
         newConflicts > 0,
       );
@@ -118,6 +147,8 @@ function renderResult(data) {
 
 async function runAnalysis() {
   if (!scenario || busy) return;
+  storyIndex = -1;
+  updateStoryLabel();
   busy = true;
   refreshCount();
   nodes.analyze.querySelector("span").textContent = "Analyzing…";
@@ -139,6 +170,37 @@ async function runAnalysis() {
   }
 }
 
+async function advanceStory() {
+  if (!scenario || busy) return;
+  const next = (storyIndex + 1) % STORY.length;
+  // Each replay starts from no selected evidence, never from a previous manual run.
+  const from = storyIndex === -1 || next === 0 ? [] : STORY[storyIndex].ids;
+  const target = STORY[next];
+  busy = true;
+  setSelection(target.ids);
+  try {
+    const response = await fetch("/api/trace", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({caseId: scenario.id, beforeEvidenceIds: from, afterEvidenceIds: target.ids}),
+    });
+    if (!response.ok) throw new Error(`Guided trace unavailable (${response.status})`);
+    const result = await response.json();
+    // Never show a delta against a prior manual session as though it were the guided trace.
+    if (next === 0) previousResult = result.before;
+    renderResult(result.after, result.changes);
+    storyIndex = next;
+    updateStoryLabel();
+    nodes.mode.textContent = "OFFLINE · AUDITABLE TRACE";
+  } catch (error) {
+    nodes.results.replaceChildren(finding("Guided trace unavailable", error.message, []));
+    nodes.mode.textContent = "ERROR";
+  } finally {
+    busy = false;
+    refreshCount();
+  }
+}
+
 async function init() {
   try {
     const response = await fetch("/api/case");
@@ -155,6 +217,7 @@ async function init() {
   }
 }
 
+nodes.storyButton.addEventListener("click", advanceStory);
 document.getElementById("preset-converging").addEventListener("click", () => selectPreset(["e1", "e2", "e3"]));
 document.getElementById("preset-conflict").addEventListener("click", () => selectPreset(["e1", "e4"]));
 nodes.analyze.addEventListener("click", runAnalysis);
