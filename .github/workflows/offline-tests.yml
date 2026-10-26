@@ -1,0 +1,22 @@
+name: Evidence Lab offline tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile source
+        run: python -m compileall -q demo tests
+      - name: Run all offline unit and loopback tests
+        run: python -m unittest discover -s tests -v
+      - name: Check browser script syntax
+        run: node --check demo/static/app.js
