@@ -1,45 +1,82 @@
-# ECHKILI × Meta Global AI Developer Hackathon 2026
+# ECHKILI Evidence Lab — Meta Hackathon 2026
 
-> **Status:** Public showcase initialized on October 26, 2026. A working hackathon demo and judging video are **not yet submitted**.
+An **offline-first, intentionally limited fictional vehicle-cabin diagnostics demo** for the Meta Global AI Developer Hackathon 2026.
 
-ECHKILI is an AI-assisted technical diagnostics project. For the Meta Global AI Developer Hackathon, the goal is to prototype a **new, evidence-grounded diagnostic interaction** that makes uncertainty visible, notices conflicting observations, and encourages safe human verification before a repair decision.
+> All observations, case identities, labels, and outcomes in this demo are fictional. This is **not** a validated diagnostic service. It does **not** suggest repairs, provide safety clearance, or diagnose real equipment.
 
-## Challenge
+## What it demonstrates
 
-Technical troubleshooting is often reduced to a confident-sounding answer drawn from incomplete observations. Our hackathon exploration focuses on a better interface between **observations, competing hypotheses, verification, and user safety**.
+- Selecting simulated observations from distinct sources.
+- Traceability: each proposed explanation links to the evidence that supports it.
+- Explicit contradiction detection and cautious human review.
+- A visible **before/after evidence update** when the selected records change between analyses.
+- An always-visible uncertainty indicator (illustrative, **not** calibrated).
+- A separate, optional Meta Model API enrichment path that is **disabled by default**.
 
-## Hackathon work (October 26 – November 4, 2026)
+The demo contains no ECHKILI production algorithms, real customer information, unreleased commercial datasets, or private monorepo code. **The commercial ECHKILI platform remains separate and private.**
 
-We intend to demonstrate:
+## Run locally
 
-1. A synthetic repair scenario with explicit observations and traceable evidence IDs.
-2. A Meta Model API-assisted reasoning step that cannot override the application's safety boundary.
-3. Competing provisional hypotheses, contradictions, and clear follow-up checks.
-4. A reproducible demonstration of what changed when new evidence was provided.
+Requires Python 3.10+; no third-party packages.
 
-**These are planned deliverables, not claims of finished functionality.** Progress and scope are tracked in [the build log](docs/BUILD_LOG.md), the [10-day sprint plan](docs/TEN_DAY_SPRINT.md), and the [Meta API setup checklist](docs/META_SETUP.md).
+```bash
+python -m demo.server
+```
 
-## Project boundaries
+Open **http://127.0.0.1:8765** on the same machine. The server refuses non-loopback addresses.
 
-- This is a separate, public **hackathon showcase**. The full ECHKILI product repository remains private.
-- Only newly written, cleared-for-publication hackathon code and synthetic fixtures belong here.
-- No customer records, private manuals, paid/proprietary datasets, credentials, internal source files, or protected assets.
-- The demo is decision support, not a certified repair diagnosis or an instruction to perform unsafe work.
-- Never put a Meta API key in a browser bundle. Any live API use must go through a server-side integration, with credit and spending safeguards verified first.
-- We will disclose which features use an actual model and which are deterministic or mocked.
+Try:
 
-## Participation
+1. **Try supporting evidence** to see tentative, referenced explanations.
+2. **Try a contradiction** to see incompatible observations and mandatory human review.
+3. Switch between the two presets and analyze again to see the evidence-delta trace.
+4. Deselect everything to see the demo decline to infer a diagnosis.
 
-- Event: [Meta Global AI Developer Hackathon](https://dev.meta.ai/events/global-hackathon)
-- Venue and submission: [Cerebral Valley](https://cerebralvalley.ai/e/meta-ai-developer-hackathon)
-- Suggested theme: **Build for Your World**; potentially **Push the Frontier** if the technical evidence supports that claim.
-- Conservative proposed track: **Indie Developer**. The founder has not incorporated ECHKILI; the final submitted track must match organizer eligibility and the accepted application.
-- Human entrant: an individual founder; coding assistance is not an additional official teammate.
+## Test
 
-## Submission
+```bash
+python -m unittest discover -s tests -v
+```
 
-See [submission checklist](docs/SUBMISSION_CHECKLIST.md). Required judging materials include a public repository and a three-minute demo of work built during the event, submitted by the deadline.
+No model calls are made during tests. Integration tests only use a local loopback HTTP server.
 
-## Licensing and safety
+## Optional Meta Model API experiment — strictly off until activated
 
-No license has been granted for the contents of this repository by default. Any third-party material must have suitable permissions before inclusion. We reserve the right to keep ECHKILI production internals private.
+For an approved single synthetic case only, the server has a provisional Standard-model annotation adapter. Five independent settings must be present before any request can be attempted:
+
+```text
+ECHKILI_META_ENABLED=true
+ECHKILI_META_CREDITS_CONFIRMED=true
+ECHKILI_META_APPROVED_CASE=cabin-climate-01
+ECHKILI_META_MAX_CALLS_PER_PROCESS=1
+META_MODEL_API_KEY=<valid key; server-side only>
+```
+
+**Do not enable the adapter until** the correct API account, official endpoint/model availability, promo credits, billing guard, and any event-specific processing terms have been checked. The per-process call count is *not an account-wide spending limit*. There is no command in this repository that enables it automatically. No real data is accepted by the UI.
+
+Untrusted model text is accepted only as a small number of provisional labels referencing known evidence IDs. Model output cannot lower uncertainty, change the human-review decision, or recommend physical procedures.
+
+## Technical boundary
+
+- Python standard-library HTTP server bound to loopback.
+- Exact static route allowlist and input/body-size validation.
+- No external dependencies, cookies, storage, log analytics, or customer accounts.
+- Content-Security-Policy, no-store, clickjacking protection.
+- UI inserts text as text nodes rather than HTML.
+
+## Ownership and publishing
+
+Public visibility is **not** equivalent to waiving copyright. No open-source license is granted by this repository at present. Read the official hackathon submission terms separately: they contain broad, ongoing rights for organizers over submitted materials. Public GitHub forks and external copies may survive later visibility changes.
+
+Commercial product and intellectual property remain with their respective rights holders. No broad open-source license is granted.
+
+## Roadmap
+
+- Verify the model-account credit and official terms before any live adapter call.
+- Record a judge-friendly demonstration of contradictory evidence behavior.
+- Publish this isolated demo *only after* a final IP boundary review.
+- Continue the production platform's engineering exclusively in the separate private repository.
+
+## Ten-day delivery and validation
+
+See [the day-by-day sprint plan](docs/TEN_DAY_SPRINT.md), [Meta integration gates](docs/META_INTEGRATION.md), and the [build log](docs/BUILD_LOG.md). The public repository contains runnable demonstration code. It does not assert that a real Meta API call has happened or that a grant is activated.
