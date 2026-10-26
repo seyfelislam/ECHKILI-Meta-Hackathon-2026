@@ -17,7 +17,7 @@ We intend to demonstrate:
 3. Competing provisional hypotheses, contradictions, and clear follow-up checks.
 4. A reproducible demonstration of what changed when new evidence was provided.
 
-**These are planned deliverables, not claims of finished functionality.** Progress and scope are tracked in [the build log](docs/BUILD_LOG.md).
+**These are planned deliverables, not claims of finished functionality.** Progress and scope are tracked in [the build log](docs/BUILD_LOG.md), the [10-day sprint plan](docs/TEN_DAY_SPRINT.md), and the [Meta API setup checklist](docs/META_SETUP.md).
 
 ## Project boundaries
 
@@ -33,7 +33,7 @@ We intend to demonstrate:
 - Event: [Meta Global AI Developer Hackathon](https://dev.meta.ai/events/global-hackathon)
 - Venue and submission: [Cerebral Valley](https://cerebralvalley.ai/e/meta-ai-developer-hackathon)
 - Suggested theme: **Build for Your World**; potentially **Push the Frontier** if the technical evidence supports that claim.
-- Proposed track: **Startup**, subject to the official rules and final application choice.
+- Conservative proposed track: **Indie Developer**. The founder has not incorporated ECHKILI; the final submitted track must match organizer eligibility and the accepted application.
 - Human entrant: an individual founder; coding assistance is not an additional official teammate.
 
 ## Submission
