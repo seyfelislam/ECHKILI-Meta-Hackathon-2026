@@ -4,10 +4,12 @@ Official documentation: https://dev.meta.ai/docs/overview
 
 ## Required from the participant account
 
-- [ ] Confirm the hackathon application is **accepted**; record entrant name and track exactly as submitted.
+- [x] Confirm the hackathon application is **accepted**. Cerebral Valley's October 20, 2026 email explicitly reports status **APPROVED**; the exact registered track still needs checking in the entrant portal.
+- [ ] Claim promotional credits using the organizer-provided October 26 email link **by November 4, 9:00 p.m. ET**. The claim must be made by the participant, not someone acting on their behalf.
 - [ ] Open the Meta Model API dashboard: https://dev.meta.ai/ and verify the correct signed-in account.
 - [ ] Confirm that the **$150 promotional credit** has actually appeared and its expiry/billing conditions.
-- [ ] Confirm whether a payment method or pay-as-you-go fallback is enabled and set a safe account-level spending limit if the provider supports one.
+- [ ] Read the participant's billing terms: the organizer email says a **credit card is required to make a Model API call** even after promo-credit approval. Adding a card is a founder-controlled payment decision, not an automated action.
+- [ ] Confirm whether a pay-as-you-go fallback is enabled and set a safe account-level spending limit if the provider supports one. The event email mentions a **Spend Limit notification**; a notification alone is not a hard cap.
 - [ ] Generate a Meta Model API key in the dashboard, **store it as a server secret only**; never send it via email, issue, chat, GitHub, or the browser.
 - [ ] Confirm account availability for `muse-spark-1.3` in **Standard mode** (not the `-contributor` model).
 - [ ] Make one **approved, low-cost** connectivity test and inspect usage; document the actual model ID/endpoint.
@@ -38,7 +40,7 @@ Sources: https://dev.meta.ai/docs/models, https://dev.meta.ai/docs/cookbook/quic
 
 ## Exact questions still open
 
-1. Which account/email has been accepted into this hackathon, and which track did the application choose?
+1. Application approval is confirmed; **which track was selected** in the application?
 2. Has the Meta promo-credit balance actually appeared in the dashboard? What is its expiry?
 3. Does the organizer require any particular Meta product or video/repo hosting format beyond the published rules?
 4. Can the organizer confirm whether a founder without a registered company is eligible for the Startup track? Until then, prefer Indie.
