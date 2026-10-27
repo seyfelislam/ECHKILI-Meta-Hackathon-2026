@@ -87,6 +87,12 @@ class DemoHTTPTests(unittest.TestCase):
         self.assertEqual(response.headers["Content-Type"], "text/javascript; charset=utf-8")
         self.assertGreater(len(body), 100)
 
+    def test_result_locale_module_is_served_as_javascript(self):
+        response, body = self.fetch("/result-i18n.js")
+        self.assertEqual(response.status, 200)
+        self.assertEqual(response.headers["Content-Type"], "text/javascript; charset=utf-8")
+        self.assertGreater(len(body), 100)
+
 
 if __name__ == "__main__":
     unittest.main()
