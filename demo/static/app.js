@@ -31,6 +31,9 @@ let busy = false;
 let previousResult = null;
 let graphLocale = "en";
 let lastGraphArgs = null;
+const compactGraphMedia = typeof window.matchMedia === "function"
+  ? window.matchMedia("(max-width: 700px)") : null;
+let lastGraphCompact = null;
 let lastResultArgs = null;
 let resultViewState = "waiting";
 const graphI18n = window.ECHKILI_GRAPH_I18N;
@@ -199,11 +202,14 @@ function drawGraph(data, earlier, comparison) {
   const graph = data.graph;
   if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) {
     lastGraphArgs = null;
+    lastGraphCompact = null;
     nodes.graphPanel.hidden = true;
     nodes.graphJump.hidden = true;
     return;
   }
   lastGraphArgs = {data, earlier, comparison};
+  const compact = Boolean(compactGraphMedia?.matches);
+  lastGraphCompact = compact;
 
   const activeIds = new Set(data.hypotheses.map((item) => item.id));
   const withdrawnIds = Array.isArray(comparison?.withdrawnHypothesisIds)
@@ -247,15 +253,17 @@ function drawGraph(data, earlier, comparison) {
     return false;
   });
 
-  const svg = svgElement("svg", {
+  const svg = compact ? null : svgElement("svg", {
     viewBox: `0 0 900 ${height}`,
     role: "img",
     direction: "ltr",
     "aria-labelledby": "evidence-graph-svg-title evidence-graph-svg-desc",
   });
-  svg.append(svgElement("title", {id: "evidence-graph-svg-title"}, graphCopy("svgTitle")));
-  svg.append(svgElement("desc", {id: "evidence-graph-svg-desc"},
-    graphCopy("svgDescription", {count: all.length, edges: visibleEdges.length, state: graphCopy(graphStateKey(graph.state))})));
+  if (svg) {
+    svg.append(svgElement("title", {id: "evidence-graph-svg-title"}, graphCopy("svgTitle")));
+    svg.append(svgElement("desc", {id: "evidence-graph-svg-desc"},
+      graphCopy("svgDescription", {count: all.length, edges: visibleEdges.length, state: graphCopy(graphStateKey(graph.state))})));
+  }
 
   const labels = new Map(all.map((item) => [item.id, item.label]));
   nodes.graphLinks.replaceChildren();
@@ -278,25 +286,27 @@ function drawGraph(data, earlier, comparison) {
     const target = position.get(edge.target);
     if (!source || !target) continue; // Never draw a fabricated endpoint.
     const conflict = edge.relation === "CONTRADICTS";
-    const d = conflict
-      ? `M ${source.x - 123} ${source.y} C 18 ${source.y}, 18 ${target.y}, ${target.x - 123} ${target.y}`
-      : `M ${source.x + 123} ${source.y} C 400 ${source.y}, 425 ${target.y}, ${target.x - 141} ${target.y}`;
-    svg.append(svgElement("path", {
-      d, fill: "none", stroke: conflict ? "#f7b8a6" : "#56dccf",
-      "stroke-width": conflict ? 3.5 : 2.4,
-      "stroke-dasharray": conflict ? "7 6" : "none",
-      opacity: conflict ? "1" : ".74",
-    }));
-    if (conflict) {
-      for (const endpoint of [
-        {x: source.x - 123, y: source.y},
-        {x: target.x - 123, y: target.y},
-      ]) {
-        svg.append(svgElement("circle", {
-          cx: endpoint.x, cy: endpoint.y, r: 4.2,
-          fill: "#0d172b", stroke: "#f7b8a6", "stroke-width": 2.5,
-          "data-relation": "CONTRADICTS", "aria-hidden": "true",
-        }));
+    if (svg) {
+      const d = conflict
+        ? `M ${source.x - 123} ${source.y} C 18 ${source.y}, 18 ${target.y}, ${target.x - 123} ${target.y}`
+        : `M ${source.x + 123} ${source.y} C 400 ${source.y}, 425 ${target.y}, ${target.x - 141} ${target.y}`;
+      svg.append(svgElement("path", {
+        d, fill: "none", stroke: conflict ? "#f7b8a6" : "#56dccf",
+        "stroke-width": conflict ? 3.5 : 2.4,
+        "stroke-dasharray": conflict ? "7 6" : "none",
+        opacity: conflict ? "1" : ".74",
+      }));
+      if (conflict) {
+        for (const endpoint of [
+          {x: source.x - 123, y: source.y},
+          {x: target.x - 123, y: target.y},
+        ]) {
+          svg.append(svgElement("circle", {
+            cx: endpoint.x, cy: endpoint.y, r: 4.2,
+            fill: "#0d172b", stroke: "#f7b8a6", "stroke-width": 2.5,
+            "data-relation": "CONTRADICTS", "aria-hidden": "true",
+          }));
+        }
       }
     }
     const ref = edge.evidenceId || (edge.evidenceIds || []).join(" + ");
@@ -314,7 +324,7 @@ function drawGraph(data, earlier, comparison) {
     nodes.graphLinks.append(card);
   }
 
-  for (const item of all) {
+  for (const item of svg ? all : []) {
     const {x, y} = position.get(item.id);
     const isEvidence = item.kind === "evidence";
     const width = isEvidence ? 246 : 282;
@@ -346,7 +356,7 @@ function drawGraph(data, earlier, comparison) {
   }
 
   if (!visibleEdges.length) nodes.graphLinks.append(element("li", "", graphCopy("noEdges")));
-  nodes.graphCanvas.replaceChildren(svg);
+  nodes.graphCanvas.replaceChildren(...(svg ? [svg] : []));
   nodes.graphState.textContent = graphCopy(graphStateKey(graph.state));
   nodes.graphState.className = `graph-state ${graph.state.toLowerCase()}`;
   nodes.graphPanel.hidden = false;
@@ -517,6 +527,13 @@ async function init() {
 }
 
 nodes.storyButton.addEventListener("click", advanceStory);
+// Crossing the CSS breakpoint (including via browser zoom) only redraws the
+// cached *display*. Never re-fetch or re-infer the evidence graph.
+compactGraphMedia?.addEventListener?.("change", () => {
+  if (lastGraphArgs && Boolean(compactGraphMedia.matches) !== lastGraphCompact) {
+    drawGraph(lastGraphArgs.data, lastGraphArgs.earlier, lastGraphArgs.comparison);
+  }
+});
 nodes.graphLocale.addEventListener("change", () => setGraphLanguage(nodes.graphLocale.value));
 setGraphLanguage(nodes.graphLocale.value);
 document.getElementById("preset-converging").addEventListener("click", () => selectPreset(["e1", "e2", "e3"]));
