@@ -35,6 +35,11 @@ let lastResultArgs = null;
 let resultViewState = "waiting";
 const graphI18n = window.ECHKILI_GRAPH_I18N;
 const resultI18n = window.ECHKILI_RESULT_I18N;
+const siteI18n = window.ECHKILI_SITE_I18N;
+
+function siteCopy(key, values = {}) {
+  return siteI18n.siteText(graphLocale, key, values);
+}
 
 function graphCopy(key, values = {}) {
   return graphI18n.graphText(graphLocale, key, values);
@@ -77,6 +82,14 @@ function resultPhrase(key, values = {}) {
 
 function setGraphLanguage(locale) {
   graphLocale = graphI18n.applyGraphLocale(document, locale);
+  siteI18n.applySiteStaticCopy(document, graphLocale);
+  if (scenario) {
+    nodes.caseTitle.textContent = siteI18n.fixtureText(graphLocale, "caseTitle");
+    nodes.caseDesc.textContent = siteI18n.fixtureText(graphLocale, "caseDescription");
+    renderEvidenceOptions();
+  }
+  updateStoryLabel();
+  refreshCount();
   nodes.resultsTitle.textContent = resultI18n.resultShellText(graphLocale, "resultsTitle");
   nodes.emptyTitle.textContent = resultI18n.resultShellText(graphLocale, "emptyTitle");
   nodes.emptyDescription.textContent = resultI18n.resultShellText(graphLocale, "emptyBody");
@@ -104,12 +117,13 @@ function selectedIds() {
 
 function refreshCount() {
   const n = selectedIds().length;
-  nodes.count.textContent = `${n} of ${scenario?.evidence.length ?? 0} observations selected · Fictional scenario only`;
+  nodes.count.textContent = siteCopy("selectionCount", {selected:n, total:scenario?.evidence.length ?? 0});
   nodes.analyze.disabled = !scenario || busy;
   nodes.storyButton.disabled = !scenario || busy;
 }
 
 function createEvidence(item) {
+  const translated = siteI18n.fixtures[graphLocale]?.[item.id] || item;
   const label = element("label", "evidence-option");
   const check = element("input");
   check.type = "checkbox";
@@ -118,10 +132,22 @@ function createEvidence(item) {
   check.addEventListener("change", refreshCount);
   const body = element("span", "evidence-body");
   const top = element("span", "evidence-top");
-  top.append(element("span", "evidence-id", item.id.toUpperCase()), element("span", "evidence-title", item.title));
-  body.append(top, element("span", "evidence-detail", item.observation), element("span", "evidence-source", `SOURCE: ${item.source}`));
+  top.append(element("span", "evidence-id", item.id.toUpperCase()), element("span", "evidence-title", translated.title));
+  const sourceLabel = graphLocale === "ar" ? "المصدر" : "SOURCE";
+  body.append(top, element("span", "evidence-detail", translated.observation), element("span", "evidence-source", `${sourceLabel}: ${translated.source}`));
   label.append(check, body);
   return label;
+}
+
+function renderEvidenceOptions() {
+  if (!scenario) return;
+  const active = new Set(selectedIds());
+  nodes.evidenceList.replaceChildren();
+  for (const item of scenario.evidence) {
+    const option = createEvidence(item);
+    option.children[0].checked = active.has(item.id);
+    nodes.evidenceList.append(option);
+  }
 }
 
 function setSelection(ids) {
@@ -138,12 +164,11 @@ function selectPreset(ids) {
 
 function updateStoryLabel() {
   if (storyIndex === -1) {
-    nodes.storyProgress.textContent = "Ready: supporting evidence → corroboration → contradiction & human review";
-    nodes.storyButton.firstChild.textContent = "Start guided demonstration ";
+    nodes.storyProgress.textContent = siteCopy("storyReady");
+    nodes.storyButton.firstChild.textContent = `${siteCopy("storyButtonStart")} `;
   } else {
-    const active = STORY[storyIndex];
-    nodes.storyProgress.textContent = `Step ${storyIndex + 1}/3: ${active.name} — ${active.aim}. Offline comparison; no Meta call.`;
-    nodes.storyButton.firstChild.textContent = storyIndex === STORY.length - 1 ? "Replay guided demonstration " : "Next evidence step ";
+    nodes.storyProgress.textContent = siteCopy(`storyStep${storyIndex + 1}`);
+    nodes.storyButton.firstChild.textContent = `${siteCopy(storyIndex === STORY.length - 1 ? "storyButtonReplay" : "storyButtonNext")} `;
   }
 }
 
@@ -378,7 +403,9 @@ function renderResult(data, comparison = null, retranslate = false) {
   ]));
 
   const findings = data.hypotheses.length ? data.hypotheses.map((hypothesis) => finding(
-    hypothesis.label, `${hypothesis.verificationGoal} · ${hypothesis.provenance} · ${resultCopy("verificationUnverified")}.`, hypothesis.supportingEvidenceIds
+    siteI18n.fixtureText(graphLocale, hypothesis.id, "label") || hypothesis.label,
+    `${siteI18n.fixtureText(graphLocale, hypothesis.id, "goal") || hypothesis.verificationGoal} · ${hypothesis.provenance} · ${resultCopy("verificationUnverified")}.`,
+    hypothesis.supportingEvidenceIds
   )) : [finding(resultCopy("insufficientTitle"), resultCopy("insufficientBody"), [])];
   nodes.results.append(block(resultCopy("findingsTitle"), findings));
 
@@ -407,7 +434,9 @@ function renderResult(data, comparison = null, retranslate = false) {
 
   if (data.contradictions.length) {
     nodes.results.append(block(resultCopy("conflictTitle"), data.contradictions.map((conflict) => finding(
-      resultCopy("conflictItem"), `${conflict.reason} ${conflict.nextStep}`, conflict.evidenceIds, true
+      resultCopy("conflictItem"),
+      `${siteI18n.fixtureText(graphLocale,"conflict","reason") || conflict.reason} ${siteI18n.fixtureText(graphLocale,"conflict","nextStep") || conflict.nextStep}`,
+      conflict.evidenceIds, true
     ))));
   }
 
@@ -479,10 +508,7 @@ async function init() {
     const response = await fetch("/api/case");
     if (!response.ok) throw new Error("Scenario service unavailable");
     scenario = await response.json();
-    nodes.caseTitle.textContent = scenario.title;
-    nodes.caseDesc.textContent = scenario.description;
-    for (const item of scenario.evidence) nodes.evidenceList.append(createEvidence(item));
-    refreshCount();
+    setGraphLanguage(graphLocale);
   } catch (error) {
     nodes.caseTitle.textContent = "Could not load the fictional case";
     nodes.caseDesc.textContent = error.message;
