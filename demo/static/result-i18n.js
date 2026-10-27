@@ -102,6 +102,32 @@ const RESULT_LOCALES = Object.freeze({
   }),
 });
 
+// Surrounding results-panel chrome was not among the model's 30 requested
+// strings. Human-authored copy completes the first-load/waiting experience.
+const RESULT_SHELL = Object.freeze({
+  en: Object.freeze({
+    resultsTitle: "Reasoning trace",
+    waiting: "WAITING FOR INPUT",
+    emptyTitle: "Your evidence, your insight.",
+    emptyBody: "Select observations and run the analysis to see a transparent reasoning trace.",
+    graphJump: "View live evidence graph",
+  }),
+  fr: Object.freeze({
+    resultsTitle: "Traçabilité du raisonnement",
+    waiting: "EN ATTENTE D’OBSERVATIONS",
+    emptyTitle: "Explorer les preuves fictives",
+    emptyBody: "Sélectionnez des observations, puis lancez l’analyse pour afficher une trace explicable.",
+    graphJump: "Voir le graphe de preuves",
+  }),
+  ar: Object.freeze({
+    resultsTitle: "تتبّع الاستدلال",
+    waiting: "بانتظار اختيار الملاحظات",
+    emptyTitle: "استكشف الأدلة الخيالية",
+    emptyBody: "اختر الملاحظات ثم شغّل التحليل لعرض خطوات الاستدلال بصورة واضحة.",
+    graphJump: "عرض مخطط الأدلة",
+  }),
+});
+
 function validResultLocale(locale) {
   return Object.hasOwn(RESULT_LOCALES, locale) ? locale : "en";
 }
@@ -111,6 +137,11 @@ function resultText(locale, key) {
   return selected[key] || RESULT_LOCALES.en[key] || "";
 }
 
-const ECHKILI_RESULT_I18N = {locales: RESULT_LOCALES, validResultLocale, resultText};
+function resultShellText(locale, key) {
+  return RESULT_SHELL[validResultLocale(locale)][key] || RESULT_SHELL.en[key] || "";
+}
+
+const ECHKILI_RESULT_I18N = {locales: RESULT_LOCALES, shell: RESULT_SHELL,
+  validResultLocale, resultText, resultShellText};
 if (typeof window !== "undefined") window.ECHKILI_RESULT_I18N = ECHKILI_RESULT_I18N;
 if (typeof module !== "undefined" && module.exports) module.exports = ECHKILI_RESULT_I18N;
