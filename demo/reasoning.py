@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .cases import CASE
+from .graph import build_graph
 
 
 def _hypothesis(identifier: str, label: str, supports: list[str], goal: str) -> dict:
@@ -60,6 +61,7 @@ def analyze(case_id: str, evidence_ids: list[str]) -> dict:
         "selectedEvidence": [dict(fixture[identifier]) for identifier in evidence_ids],
         "hypotheses": hypotheses,
         "contradictions": contradictions,
+        "graph": build_graph([dict(fixture[identifier]) for identifier in evidence_ids], hypotheses, contradictions),
         "uncertainty": uncertainty,
         "recommendedAction": "TECHNICIAN_REVIEW" if contradictions else "CONTINUE_DIAGNOSIS",
         "inference": {"mode": "deterministic-offline-demo", "metaCalled": False, "model": None},
