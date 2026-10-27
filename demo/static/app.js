@@ -28,7 +28,9 @@ let busy = false;
 let previousResult = null;
 let graphLocale = "en";
 let lastGraphArgs = null;
+let lastResultArgs = null;
 const graphI18n = window.ECHKILI_GRAPH_I18N;
+const resultI18n = window.ECHKILI_RESULT_I18N;
 
 function graphCopy(key, values = {}) {
   return graphI18n.graphText(graphLocale, key, values);
@@ -39,9 +41,43 @@ function graphStateKey(state) {
     state === "PROVISIONAL" ? "statusProvisional" : "statusAbstain";
 }
 
+function resultCopy(key) {
+  return resultI18n.resultText(graphLocale, key);
+}
+
+// Safe placeholder fragments: Arabic IDs and numbers receive actual BDI
+// elements instead of embedding invisible direction controls into copy.
+function resultPhrase(key, values = {}) {
+  const container = element("span");
+  const template = resultCopy(key);
+  const slots = /\{(ids|count|delta|before|after)\}/g;
+  let index = 0;
+  for (const match of template.matchAll(slots)) {
+    if (match.index > index) container.append(element("span", "", template.slice(index, match.index)));
+    const name = match[1];
+    const raw = values[name];
+    const entries = name === "ids" && Array.isArray(raw) ? [...raw] : [raw];
+    if (!entries.length) entries.push("—");
+    entries.forEach((value, offset) => {
+      if (offset) container.append(element("span", "", " · "));
+      const text = value === undefined || value === null ? "—" : String(value);
+      const item = element(graphLocale === "ar" ? "bdi" : "span", "", text);
+      if (graphLocale === "ar") item.setAttribute("dir", "ltr");
+      container.append(item);
+    });
+    index = match.index + match[0].length;
+  }
+  if (index < template.length) container.append(element("span", "", template.slice(index)));
+  return container;
+}
+
 function setGraphLanguage(locale) {
   graphLocale = graphI18n.applyGraphLocale(document, locale);
-  if (lastGraphArgs) drawGraph(lastGraphArgs.data, lastGraphArgs.earlier, lastGraphArgs.comparison);
+  nodes.results.lang = graphLocale;
+  nodes.results.dir = graphLocale === "ar" ? "rtl" : "ltr";
+  if (!busy) nodes.analyze.querySelector("span").textContent = resultCopy("analyzeButton");
+  if (lastResultArgs) renderResult(lastResultArgs.data, lastResultArgs.comparison, true);
+  else if (lastGraphArgs) drawGraph(lastGraphArgs.data, lastGraphArgs.earlier, lastGraphArgs.comparison);
 }
 
 function element(tag, className, text) {
@@ -281,77 +317,91 @@ function drawGraph(data, earlier, comparison) {
   nodes.graphJump.hidden = false;
 }
 
-function renderResult(data, comparison = null) {
-  const earlier = previousResult;
+function renderResult(data, comparison = null, retranslate = false) {
+  const earlier = retranslate && lastResultArgs ? lastResultArgs.earlier : previousResult;
   nodes.results.replaceChildren();
-  if (previousResult) {
-    const previousIds = new Set(previousResult.selectedEvidence.map((item) => item.id));
+  nodes.results.lang = graphLocale;
+  nodes.results.dir = graphLocale === "ar" ? "rtl" : "ltr";
+  if (earlier) {
+    const previousIds = new Set(earlier.selectedEvidence.map((item) => item.id));
     const currentIds = new Set(data.selectedEvidence.map((item) => item.id));
     const added = [...currentIds].filter((id) => !previousIds.has(id));
     const removed = [...previousIds].filter((id) => !currentIds.has(id));
-    const previousHypotheses = new Set(previousResult.hypotheses.map((hypothesis) => hypothesis.id));
+    const previousHypotheses = new Set(earlier.hypotheses.map((hypothesis) => hypothesis.id));
     const currentHypotheses = new Set(data.hypotheses.map((hypothesis) => hypothesis.id));
     const appeared = [...currentHypotheses].filter((id) => !previousHypotheses.has(id));
     const disappeared = [...previousHypotheses].filter((id) => !currentHypotheses.has(id));
-    const newConflicts = data.contradictions.length - previousResult.contradictions.length;
+    const newConflicts = data.contradictions.length - earlier.contradictions.length;
     if (added.length || removed.length || appeared.length || disappeared.length || newConflicts) {
       const backed = comparison && Array.isArray(comparison.addedEvidenceIds);
-      const source = backed ? "SERVER-VERIFIED OFFLINE TRACE" : "LOCAL VIEW COMPARISON";
-      const changed = finding(
-        "What changed after new evidence?",
-        `Added: ${added.join(", ") || "none"}. Removed: ${removed.join(", ") || "none"}. ` +
-        `New explanations: ${appeared.length}; withdrawn explanations: ${disappeared.length}. ` +
-        `Contradiction change: ${newConflicts > 0 ? "+" : ""}${newConflicts}. ` +
-        `Illustrative caution score (not a probability): ${previousResult.uncertainty.toFixed(2)} → ${data.uncertainty.toFixed(2)}. ` +
-        `${source}.`,
-        added,
-        newConflicts > 0,
-      );
-      nodes.results.append(block("EVIDENCE UPDATE · SINCE LAST ANALYSIS", [changed]));
+      const changed = finding(resultCopy("changeTitle"), "", added, newConflicts > 0);
+      const prose = changed.children[1];
+      const phrases = [
+        resultPhrase("addedIds", {ids: added}),
+        resultPhrase("removedIds", {ids: removed}),
+        resultPhrase("newFindingsCount", {count: appeared.length}),
+        resultPhrase("withdrawnFindingsCount", {count: disappeared.length}),
+        resultPhrase("conflictDelta", {delta: `${newConflicts > 0 ? "+" : ""}${newConflicts}`}),
+        resultPhrase("cautionUpdate", {before: earlier.uncertainty.toFixed(2), after: data.uncertainty.toFixed(2)}),
+        element("span", "", resultCopy(backed ? "sourceServerTrace" : "sourceLocalComparison")),
+      ];
+      phrases.forEach((phrase, i) => {
+        if (i) prose.append(element("span", "", ". "));
+        prose.append(phrase);
+      });
+      nodes.results.append(block(resultCopy("changeTitle"), [changed]));
     }
   }
-  previousResult = data;
+  if (!retranslate) {
+    lastResultArgs = {data, comparison, earlier};
+    previousResult = data;
+  }
   drawGraph(data, earlier, comparison);
-  nodes.mode.textContent = data.inference.metaAccepted ? "OFFLINE + UNVERIFIED META NOTES" :
-    data.inference.metaCalled ? "OFFLINE · META RESPONSE NOT USED" : "TRANSPARENT OFFLINE RULES";
+  nodes.mode.textContent = resultCopy(data.inference.metaAccepted ? "modeRemoteAccepted" :
+    data.inference.metaCalled ? "modeRemoteRejected" : "modeOffline");
   const number = element("div", "uncertainty-number", `${data.uncertainty.toFixed(2)} / 1.00`);
-  nodes.results.append(block("ESTIMATED UNCERTAINTY · NOT A PROBABILITY", [number,
-    element("p", "result-desc", "Uncalibrated fictional caution score for this teaching example; not a statistical estimate, confidence percentage, or decision threshold."),
+  number.dir = "ltr";
+  nodes.results.append(block(resultCopy("cautionTitle"), [number,
+    element("p", "result-desc", resultCopy("cautionBody")),
   ]));
 
   const findings = data.hypotheses.length ? data.hypotheses.map((hypothesis) => finding(
-    hypothesis.label, `${hypothesis.verificationGoal} · ${hypothesis.provenance} · Unverified.`, hypothesis.supportingEvidenceIds
-  )) : [finding("Not enough consistent evidence", "The example abstains from producing a specific hypothesis. Select more observations or request human review.", [])];
-  nodes.results.append(block("PROVISIONAL HYPOTHESES", findings));
+    hypothesis.label, `${hypothesis.verificationGoal} · ${hypothesis.provenance} · ${resultCopy("verificationUnverified")}.`, hypothesis.supportingEvidenceIds
+  )) : [finding(resultCopy("insufficientTitle"), resultCopy("insufficientBody"), [])];
+  nodes.results.append(block(resultCopy("findingsTitle"), findings));
 
   // Optional model text is not a hypothesis, graph node, evidence edge or
   // second opinion. Keep it physically and semantically separate from both.
   const remoteNotes = Array.isArray(data.metaAnnotations) && data.inference.metaAccepted
     ? data.metaAnnotations : [];
   if (remoteNotes.length) {
-    const children = [element("p", "result-desc",
-      "Unverified remote model suggestions for this fictional example only. " +
-      "Citations are pointers to selected records, not independent corroboration or diagnoses.")];
+    const children = [element("p", "result-desc", resultCopy("remoteNotesBody"))];
     for (const note of remoteNotes) {
       const card = element("div", "finding");
+      const refs = element("div", "evidence-refs");
+      refs.append(element("span", "", `${resultCopy("remoteCitations")}: `));
+      note.citations.forEach((id, index) => {
+        if (index) refs.append(element("span", "", " · "));
+        const ref = element("bdi", "", id);
+        ref.setAttribute("dir", "ltr");
+        refs.append(ref);
+      });
       card.append(element("h4", "", note.label),
-        element("p", "", "Remote annotation · unverified · not part of the evidence graph."),
-        element("div", "evidence-refs",
-          `CITED SELECTED IDS (NOT VERIFIED): ${note.citations.join(" · ")}`));
+        element("p", "", resultCopy("remoteNoteStatus")), refs);
       children.push(card);
     }
-    nodes.results.append(block("REMOTE MODEL NOTES · UNVERIFIED", children));
+    nodes.results.append(block(resultCopy("remoteNotesTitle"), children));
   }
 
   if (data.contradictions.length) {
-    nodes.results.append(block("CONTRADICTIONS DETECTED", data.contradictions.map((conflict) => finding(
-      "Conflicting observations", `${conflict.reason} ${conflict.nextStep}`, conflict.evidenceIds, true
+    nodes.results.append(block(resultCopy("conflictTitle"), data.contradictions.map((conflict) => finding(
+      resultCopy("conflictItem"), `${conflict.reason} ${conflict.nextStep}`, conflict.evidenceIds, true
     ))));
   }
 
-  nodes.results.append(block("SAFETY & LIMITATIONS", [
-    element("div", "safety-banner", data.recommendedAction === "TECHNICIAN_REVIEW" ? "Qualified human review is required before forming a conclusion." : "This exercise is informational only. A qualified expert must verify any real-world interpretation."),
-    element("p", "result-desc", data.limitations.join(" ")),
+  nodes.results.append(block(resultCopy("safetyTitle"), [
+    element("div", "safety-banner", resultCopy(data.recommendedAction === "TECHNICIAN_REVIEW" ? "safetyReview" : "safetyNotice")),
+    element("p", "result-desc", resultCopy("safetyNotice") + (graphLocale === "en" ? ` ${data.limitations.join(" ")}` : "")),
   ]));
 }
 
@@ -361,7 +411,7 @@ async function runAnalysis() {
   updateStoryLabel();
   busy = true;
   refreshCount();
-  nodes.analyze.querySelector("span").textContent = "Analyzing…";
+  nodes.analyze.querySelector("span").textContent = resultCopy("analyzeBusy");
   try {
     const response = await fetch("/api/analyze", {
       method: "POST",
@@ -371,11 +421,11 @@ async function runAnalysis() {
     if (!response.ok) throw new Error(`Analysis unavailable (${response.status})`);
     renderResult(await response.json());
   } catch (error) {
-    nodes.results.replaceChildren(finding("Analysis unavailable", error.message, []));
+    nodes.results.replaceChildren(finding(resultCopy("analysisErrorTitle"), error.message, []));
     nodes.mode.textContent = "ERROR";
   } finally {
     busy = false;
-    nodes.analyze.querySelector("span").textContent = "Analyze selected evidence";
+    nodes.analyze.querySelector("span").textContent = resultCopy("analyzeButton");
     refreshCount();
   }
 }
