@@ -10,6 +10,11 @@ const nodes = {
   mode: document.getElementById("result-mode"),
   storyButton: document.getElementById("story-button"),
   storyProgress: document.getElementById("story-progress"),
+  graphPanel: document.getElementById("graph-panel"),
+  graphCanvas: document.getElementById("graph-canvas"),
+  graphLinks: document.getElementById("graph-links"),
+  graphState: document.getElementById("graph-state"),
+  graphJump: document.getElementById("graph-jump"),
 };
 const STORY = [
   {name: "Initial evidence", ids: ["e1", "e2"], aim: "First evidence-linked possibility"},
@@ -91,7 +96,115 @@ function finding(title, description, refs, warning = false) {
   return div;
 }
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function svgElement(tag, attributes = {}, text = null) {
+  const item = document.createElementNS(SVG_NS, tag);
+  for (const [name, value] of Object.entries(attributes)) item.setAttribute(name, String(value));
+  if (text !== null) item.textContent = text;
+  return item;
+}
+
+function drawGraph(data, earlier, comparison) {
+  const graph = data.graph;
+  if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) {
+    nodes.graphPanel.hidden = true;
+    nodes.graphJump.hidden = true;
+    return;
+  }
+
+  const activeIds = new Set(data.hypotheses.map((item) => item.id));
+  const withdrawnIds = Array.isArray(comparison?.withdrawnHypothesisIds)
+    ? comparison.withdrawnHypothesisIds
+    : (earlier?.hypotheses || []).filter((item) => !activeIds.has(item.id)).map((item) => item.id);
+  const ghosts = withdrawnIds.map((id) => earlier?.hypotheses.find((item) => item.id === id))
+    .filter(Boolean)
+    .map((item) => ({id: `withdrawn:${item.id}`, kind: "withdrawn", label: item.label}));
+
+  const all = [...graph.nodes, ...ghosts];
+  const evidence = all.filter((item) => item.kind === "evidence");
+  const conclusions = all.filter((item) => item.kind !== "evidence");
+  const height = Math.max(300, 88 + 70 * Math.max(evidence.length, conclusions.length));
+  const position = new Map();
+  const spread = (array, x) => array.forEach((item, index) => position.set(item.id, {
+    x,
+    y: Math.round(height * (index + 1) / (array.length + 1)),
+  }));
+  spread(evidence, 175);
+  spread(conclusions, 638);
+
+  const svg = svgElement("svg", {
+    viewBox: `0 0 900 ${height}`,
+    role: "img",
+    "aria-labelledby": "evidence-graph-svg-title evidence-graph-svg-desc",
+  });
+  svg.append(svgElement("title", {id: "evidence-graph-svg-title"}, "Traceable fictional evidence graph"));
+  svg.append(svgElement("desc", {id: "evidence-graph-svg-desc"},
+    `${evidence.length} observations; ${graph.edges.length} evidence connections; state ${graph.state}. The text transcript below gives each relationship.`));
+
+  const labels = new Map(all.map((item) => [item.id, item.label]));
+  nodes.graphLinks.replaceChildren();
+  for (const edge of graph.edges) {
+    const source = position.get(edge.source);
+    const target = position.get(edge.target);
+    if (!source || !target) continue; // Never draw a fabricated endpoint.
+    const conflict = edge.relation === "CONTRADICTS";
+    const d = conflict
+      ? `M ${source.x - 123} ${source.y} C 18 ${source.y}, 18 ${target.y}, ${target.x - 123} ${target.y}`
+      : `M ${source.x + 123} ${source.y} C 400 ${source.y}, 425 ${target.y}, ${target.x - 141} ${target.y}`;
+    svg.append(svgElement("path", {
+      d, fill: "none", stroke: conflict ? "#f7b8a6" : "#56dccf",
+      "stroke-width": conflict ? 3.5 : 2.4,
+      "stroke-dasharray": conflict ? "7 6" : "none",
+      opacity: conflict ? "1" : ".74",
+    }));
+    const ref = edge.evidenceId || (edge.evidenceIds || []).join(" + ");
+    const sentence = conflict
+      ? `${ref}: two fictional reports contradict each other; human review required.`
+      : `${ref}: supports the provisional, unverified explanation “${labels.get(edge.target)}”.`;
+    nodes.graphLinks.append(element("li", "", sentence));
+  }
+
+  for (const item of all) {
+    const {x, y} = position.get(item.id);
+    const isEvidence = item.kind === "evidence";
+    const width = isEvidence ? 246 : 282;
+    const palette = {
+      evidence: ["#1e2444", "#a992ff"],
+      hypothesis: ["#112d36", "#56dccf"],
+      review: ["#402726", "#f7b8a6"],
+      withdrawn: ["#2f2530", "#f7b8a6"],
+    }[item.kind];
+    const group = svgElement("g");
+    group.append(svgElement("rect", {
+      x: x - width / 2, y: y - 31, width, height: 62, rx: 11,
+      fill: palette[0], stroke: palette[1],
+      "stroke-width": item.kind === "review" ? 2.4 : 1.4,
+      "stroke-dasharray": item.kind === "withdrawn" ? "6 5" : "none",
+    }));
+    const kicker = item.kind === "evidence" ? item.sourceId.toUpperCase() :
+      item.kind === "hypothesis" ? "UNVERIFIED HYPOTHESIS" :
+      item.kind === "withdrawn" ? "WITHDRAWN EXPLANATION" : "REVIEW REQUIRED";
+    group.append(svgElement("text", {x: x - width / 2 + 14, y: y - 11, fill: palette[1],
+      "font-size": 10, "font-weight": 750, "letter-spacing": .8}, kicker));
+    const label = String(item.label || item.id);
+    const limit = isEvidence ? 29 : 35;
+    group.append(svgElement("text", {x: x - width / 2 + 14, y: y + 12, fill: "#f3f5ff", "font-size": 12.5},
+      label.length > limit ? `${label.slice(0, limit - 1)}…` : label));
+    svg.append(group);
+  }
+
+  for (const ghost of ghosts) nodes.graphLinks.append(element("li", "", `${ghost.label}: withdrawn after the evidence set changed.`));
+  if (!graph.edges.length) nodes.graphLinks.append(element("li", "", "No supported relationships: the fictional example abstains."));
+  nodes.graphCanvas.replaceChildren(svg);
+  nodes.graphState.textContent = graph.state.replaceAll("_", " ");
+  nodes.graphState.className = `graph-state ${graph.state.toLowerCase()}`;
+  nodes.graphPanel.hidden = false;
+  nodes.graphJump.hidden = false;
+}
+
 function renderResult(data, comparison = null) {
+  const earlier = previousResult;
   nodes.results.replaceChildren();
   if (previousResult) {
     const previousIds = new Set(previousResult.selectedEvidence.map((item) => item.id));
@@ -120,6 +233,7 @@ function renderResult(data, comparison = null) {
     }
   }
   previousResult = data;
+  drawGraph(data, earlier, comparison);
   nodes.mode.textContent = data.inference.metaCalled ? "META ASSIST · PROVISIONAL" : "TRANSPARENT OFFLINE RULES";
   const number = element("div", "uncertainty-number", `${Math.round(data.uncertainty * 100)}%`);
   const meter = element("div", "meter");
