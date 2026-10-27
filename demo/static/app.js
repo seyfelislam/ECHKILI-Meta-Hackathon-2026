@@ -165,6 +165,17 @@ function drawGraph(data, earlier, comparison) {
 
   const labels = new Map(all.map((item) => [item.id, item.label]));
   nodes.graphLinks.replaceChildren();
+  // The transcript contains every node as well as every edge, even when the
+  // diagram is off-screen, zoomed, or horizontally scrolled on a small phone.
+  for (const item of all) {
+    const ref = item.kind === "evidence" ? item.sourceId : item.id.replace(/^(h:|withdrawn:)/, "");
+    const printedRef = graphLocale === "ar" ? `\u2066${ref}\u2069` : ref;
+    const nodeLine = item.kind === "withdrawn"
+      ? graphCopy("ghostWithdrawn", {label: `${printedRef} — ${item.label}`})
+      : `${graphCopy(item.kind === "evidence" ? "legendObservation" :
+        item.kind === "hypothesis" ? "legendHypothesis" : "statusHumanReview")}: ${printedRef} — ${item.label}`;
+    nodes.graphLinks.append(element("li", "graph-transcript-node", nodeLine));
+  }
   for (const edge of graph.edges) {
     const source = position.get(edge.source);
     const target = position.get(edge.target);
@@ -179,6 +190,18 @@ function drawGraph(data, earlier, comparison) {
       "stroke-dasharray": conflict ? "7 6" : "none",
       opacity: conflict ? "1" : ".74",
     }));
+    if (conflict) {
+      for (const endpoint of [
+        {x: source.x - 123, y: source.y},
+        {x: target.x - 123, y: target.y},
+      ]) {
+        svg.append(svgElement("circle", {
+          cx: endpoint.x, cy: endpoint.y, r: 4.2,
+          fill: "#0d172b", stroke: "#f7b8a6", "stroke-width": 2.5,
+          "data-relation": "CONTRADICTS", "aria-hidden": "true",
+        }));
+      }
+    }
     const ref = edge.evidenceId || (edge.evidenceIds || []).join(" + ");
     const sentence = conflict
       ? graphCopy("edgeConflict", {ref})
@@ -205,9 +228,11 @@ function drawGraph(data, earlier, comparison) {
     }));
     const kicker = item.kind === "evidence" ? item.sourceId.toUpperCase() :
       item.kind === "hypothesis" ? graphCopy("legendHypothesis") :
-      item.kind === "withdrawn" ? graphCopy("legendConflict") : graphCopy("statusHumanReview");
+      item.kind === "withdrawn" ? graphCopy("ghostWithdrawn", {label: item.id.replace("withdrawn:", "")}) :
+      graphCopy("statusHumanReview");
     group.append(svgElement("text", {x: x - width / 2 + 14, y: y - 11, fill: palette[1],
-      "font-size": 10, "font-weight": 750, "letter-spacing": .8}, kicker));
+      "font-size": 10, "font-weight": 750, "letter-spacing": .8},
+    kicker.length > 32 ? `${kicker.slice(0, 31)}…` : kicker));
     const label = String(item.label || item.id);
     const limit = isEvidence ? 29 : 35;
     group.append(svgElement("text", {x: x - width / 2 + 14, y: y + 12, fill: "#f3f5ff", "font-size": 12.5},
@@ -215,7 +240,6 @@ function drawGraph(data, earlier, comparison) {
     svg.append(group);
   }
 
-  for (const ghost of ghosts) nodes.graphLinks.append(element("li", "", graphCopy("ghostWithdrawn", {label: ghost.label})));
   if (!graph.edges.length) nodes.graphLinks.append(element("li", "", graphCopy("noEdges")));
   nodes.graphCanvas.replaceChildren(svg);
   nodes.graphState.textContent = graphCopy(graphStateKey(graph.state));
