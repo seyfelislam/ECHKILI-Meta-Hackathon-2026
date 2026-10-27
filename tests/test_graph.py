@@ -56,6 +56,32 @@ class GraphStateTests(unittest.TestCase):
                 contradictions=[],
             )
 
+    def test_wonder_t03_conflict_withdraws_only_dependent_hypothesis(self):
+        graph = build_graph(
+            selected_evidence=[{"id": identifier, "title": identifier} for identifier in ("e1", "e2", "e3", "e4")],
+            hypotheses=[
+                {"id": "h1", "label": "Conflict dependent", "supportingEvidenceIds": ["e1", "e2"]},
+                {"id": "h2", "label": "Independent", "supportingEvidenceIds": ["e3", "e4"]},
+            ],
+            contradictions=[{"evidenceIds": ["e1", "e2"]}],
+        )
+        self.assertEqual(graph["state"], "HUMAN_REVIEW")
+        self.assertEqual({node["id"] for node in graph["nodes"] if node["kind"] == "hypothesis"}, {"h:h2"})
+        self.assertEqual({edge["target"] for edge in graph["edges"] if edge["relation"] == "SUPPORTS"}, {"h:h2"})
+
+    def test_wonder_t09_new_conflict_withdraws_other_dependent_hypothesis(self):
+        evidence = [{"id": identifier, "title": identifier} for identifier in ("e1", "e2", "e3", "e4")]
+        hypotheses = [
+            {"id": "h1", "label": "Independent", "supportingEvidenceIds": ["e1", "e2"]},
+            {"id": "h2", "label": "Conflict dependent", "supportingEvidenceIds": ["e3", "e4"]},
+        ]
+        before = build_graph(evidence, hypotheses, [])
+        after = build_graph(evidence, hypotheses, [{"evidenceIds": ["e3", "e4"]}])
+        self.assertEqual({node["id"] for node in before["nodes"] if node["kind"] == "hypothesis"}, {"h:h1", "h:h2"})
+        self.assertEqual(after["state"], "HUMAN_REVIEW")
+        self.assertEqual({node["id"] for node in after["nodes"] if node["kind"] == "hypothesis"}, {"h:h1"})
+        self.assertEqual({edge["target"] for edge in after["edges"] if edge["relation"] == "SUPPORTS"}, {"h:h1"})
+
 
 if __name__ == "__main__":
     unittest.main()
