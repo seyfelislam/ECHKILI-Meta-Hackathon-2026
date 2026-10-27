@@ -202,4 +202,33 @@ assert(changeBlock, "a changed synthetic evidence selection needs an audit delta
 assert(!changeBlock.children[1].children[1].textContent.includes("%"),
   "the comparison must not re-introduce probability-like percentages");
 
+// Remote model notes never become canonical findings or evidence graph links.
+ctx.__input = {
+  graph: {state: "PROVISIONAL", nodes: [
+    {id: "e:e1", kind: "evidence", sourceId: "e1", label: "Record A"},
+    {id: "e:e2", kind: "evidence", sourceId: "e2", label: "Record B"},
+  ], edges: []},
+  hypotheses: [], selectedEvidence: [{id: "e1"}, {id: "e2"}], contradictions: [],
+  metaAnnotations: [{label: "Fictional external suggestion", citations: ["e1", "e2"],
+    provenance: "remote-unverified", verified: false}],
+  inference: {mode: "deterministic-offline-demo", metaCalled: true, metaCompleted: true, metaAccepted: true},
+  uncertainty: 0.66, recommendedAction: "CONTINUE_DIAGNOSIS", limitations: ["Fictional only."],
+};
+vm.runInContext("renderResult(__input)", ctx);
+const sections = id("results").children.filter(part => part.className === "result-section");
+const canonical = sections.find(part => part.children[0].textContent.includes("PROVISIONAL HYPOTHESES"));
+assert(canonical && !canonical.children.some(child => child.children.some?.(sub =>
+  sub.textContent.includes("Fictional external suggestion"))),
+"remote text must never appear as a canonical hypothesis");
+const remote = sections.find(part => part.children[0].textContent.includes("REMOTE MODEL NOTES"));
+assert(remote, "optional annotations need a separately named section");
+assert(remote.children.some(part => part.textContent.toLowerCase().includes("unverified")),
+  "the remote note section must spell out its unverified status");
+assert(remote.children.some(part => part.children.some?.(child =>
+  child.textContent.includes("Fictional external suggestion"))),
+"remote annotation text should only appear in its segregated section");
+assert.equal(relationCards().length, 0, "remote note citations must not fabricate graph edges");
+assert(id("result-mode").textContent.includes("UNVERIFIED"),
+  "the summary must not imply a remote note is a verified hypothesis");
+
 console.log("Mobile graph synthetic contract: relationships, withdrawal, RTL IDs and abstention verified");
