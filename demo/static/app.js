@@ -192,10 +192,13 @@ function drawGraph(data, earlier, comparison) {
   for (const item of all) {
     const ref = item.kind === "evidence" ? item.sourceId : item.id.replace(/^(h:|withdrawn:)/, "");
     const printedRef = graphLocale === "ar" ? `\u2066${ref}\u2069` : ref;
+    const kindLabel = item.kind === "evidence" ? graphCopy("legendObservation") :
+      item.kind === "hypothesis" ? (graph.state === "HUMAN_REVIEW"
+        ? `${graphCopy("legendHypothesis")} · ${graphCopy("statusHumanReview")}`
+        : graphCopy("legendHypothesis")) : graphCopy("statusHumanReview");
     const nodeLine = item.kind === "withdrawn"
       ? graphCopy("ghostWithdrawn", {label: `${printedRef} — ${item.label}`})
-      : `${graphCopy(item.kind === "evidence" ? "legendObservation" :
-        item.kind === "hypothesis" ? "legendHypothesis" : "statusHumanReview")}: ${printedRef} — ${item.label}`;
+      : `${kindLabel}: ${printedRef} — ${item.label}`;
     nodes.graphLinks.append(element("li", `graph-transcript-node${item.kind === "withdrawn" ? " graph-transcript-withdrawn" : ""}`, nodeLine));
   }
   for (const edge of visibleEdges) {
@@ -229,7 +232,8 @@ function drawGraph(data, earlier, comparison) {
     const visibleTarget = graphLocale === "ar" ? `\u2066${targetRef}\u2069` : targetRef;
     const sentence = conflict
       ? graphCopy("edgeConflict", {ref})
-      : graphCopy("edgeSupports", {ref, label: `${visibleTarget} — ${labels.get(edge.target)}`});
+      : graphCopy("edgeSupports", {ref, label: `${visibleTarget} — ${labels.get(edge.target)}`}) +
+        (graph.state === "HUMAN_REVIEW" ? ` ${graphCopy("statusHumanReview")}.` : "");
     // The mobile relation card and desktop SVG share the SAME validated edge.
     const card = element("li", `graph-relation-card ${conflict ? "relation-conflict" : "relation-support"}`, sentence);
     card.setAttribute("data-source", edge.source);
@@ -256,7 +260,7 @@ function drawGraph(data, earlier, comparison) {
       "stroke-dasharray": item.kind === "withdrawn" ? "6 5" : "none",
     }));
     const kicker = item.kind === "evidence" ? item.sourceId.toUpperCase() :
-      item.kind === "hypothesis" ? graphCopy("legendHypothesis") :
+      item.kind === "hypothesis" ? graphCopy(graph.state === "HUMAN_REVIEW" ? "statusHumanReview" : "legendHypothesis") :
       item.kind === "withdrawn" ? graphCopy("ghostWithdrawn", {label: item.id.replace("withdrawn:", "")}) :
       graphCopy("statusHumanReview");
     group.append(svgElement("text", {x: x - width / 2 + 14, y: y - 11, fill: palette[1],
@@ -298,7 +302,7 @@ function renderResult(data, comparison = null) {
         `Added: ${added.join(", ") || "none"}. Removed: ${removed.join(", ") || "none"}. ` +
         `New explanations: ${appeared.length}; withdrawn explanations: ${disappeared.length}. ` +
         `Contradiction change: ${newConflicts > 0 ? "+" : ""}${newConflicts}. ` +
-        `Illustrative uncertainty: ${Math.round(previousResult.uncertainty * 100)}% → ${Math.round(data.uncertainty * 100)}%. ` +
+        `Illustrative caution score (not a probability): ${previousResult.uncertainty.toFixed(2)} → ${data.uncertainty.toFixed(2)}. ` +
         `${source}.`,
         added,
         newConflicts > 0,
@@ -309,12 +313,10 @@ function renderResult(data, comparison = null) {
   previousResult = data;
   drawGraph(data, earlier, comparison);
   nodes.mode.textContent = data.inference.metaCalled ? "META ASSIST · PROVISIONAL" : "TRANSPARENT OFFLINE RULES";
-  const number = element("div", "uncertainty-number", `${Math.round(data.uncertainty * 100)}%`);
-  const meter = element("div", "meter");
-  const fill = element("span", "meter-fill");
-  fill.style.width = `${Math.round(data.uncertainty * 100)}%`;
-  meter.append(fill);
-  nodes.results.append(block("ESTIMATED UNCERTAINTY · ILLUSTRATIVE", [number, meter, element("p", "result-desc", "A design signal, not a calibrated scientific probability. Higher means less confidence in the available evidence.")]));
+  const number = element("div", "uncertainty-number", `${data.uncertainty.toFixed(2)} / 1.00`);
+  nodes.results.append(block("ESTIMATED UNCERTAINTY · NOT A PROBABILITY", [number,
+    element("p", "result-desc", "Uncalibrated fictional caution score for this teaching example; not a statistical estimate, confidence percentage, or decision threshold."),
+  ]));
 
   const findings = data.hypotheses.length ? data.hypotheses.map((hypothesis) => finding(
     hypothesis.label, `${hypothesis.verificationGoal} · ${hypothesis.provenance} · Unverified.`, hypothesis.supportingEvidenceIds
