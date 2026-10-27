@@ -32,3 +32,13 @@
 .graph-transcript li{color:#bbcee3;background:#ffffff07;border:1px solid #ffffff13;border-radius:8px;font-size:12px;line-height:1.5;padding:9px 11px}
 .graph-disclaimer{font-size:11px;color:#8799b8;margin:20px 0 0}
 @media(max-width:700px){.graph-panel{padding:21px 15px}.graph-heading h3{font-size:26px}.graph-transcript ul{grid-template-columns:1fr}.graph-legend{gap:11px}}
+
+/* Spark-reviewed graph language switch; only the explanatory panel changes direction. */
+.graph-header-controls{display:flex;flex-direction:column;align-items:flex-end;gap:8px;min-width:158px}
+.graph-header-controls label{color:#b6c6df;font-size:11px;font-weight:650}
+.graph-header-controls select{background:#142d3d;color:#f2f5ff;border:1px solid #678197;border-radius:9px;padding:8px 12px;font:inherit;font-size:13px;min-width:158px}
+.graph-header-controls select:focus-visible{outline:3px solid #56dccf;outline-offset:3px}
+.graph-panel[dir="rtl"] .graph-header-controls{align-items:flex-start}
+.graph-panel[dir="rtl"] .graph-transcript{text-align:right}
+.graph-panel[dir="rtl"] .graph-canvas{direction:ltr}
+@media(max-width:700px){.graph-header-controls{width:100%;align-items:flex-start}.graph-header-controls select{max-width:100%}.graph-state{white-space:normal}}
