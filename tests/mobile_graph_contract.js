@@ -51,6 +51,16 @@ const ctx = {
 vm.createContext(ctx);
 vm.runInContext(fs.readFileSync("demo/static/app.js", "utf8"), ctx);
 
+// The untranslated empty/waiting state is the first impression at mobile
+// width; switching languages before an analysis must translate that shell.
+id("graph-locale").value = "ar";
+id("graph-locale").handlers.change();
+assert.equal(id("results-title").textContent, resultI18n.resultShellText("ar", "resultsTitle"));
+assert.equal(id("result-mode").textContent, resultI18n.resultShellText("ar", "waiting"));
+assert.equal(id("empty-state-title").textContent, resultI18n.resultShellText("ar", "emptyTitle"));
+id("graph-locale").value = "en";
+id("graph-locale").handlers.change();
+
 const graph = {
   state: "HUMAN_REVIEW",
   nodes: [
@@ -272,5 +282,16 @@ const isolated = descendants(arChange).filter(n => n.tag === "bdi" && n.attribut
 assert(isolated.some(n => n.textContent.includes("e1") || n.textContent.includes("e2")),
   "technical IDs need real bdi isolation inside localized changes");
 assert.equal(relationCards().length, 0, "locale changes must not fabricate graph edges for remote notes");
+
+// If the most recent analysis failed, changing the language cannot silently
+// restore stale successful output and hide the failure banner.
+const errorCard = new Node("section");
+errorCard.textContent = "Analysis unavailable";
+id("results").replaceChildren(errorCard);
+vm.runInContext('resultViewState = "error"', ctx);
+id("graph-locale").value = "fr";
+id("graph-locale").handlers.change();
+assert.equal(id("results").children[0], errorCard,
+  "retranslation after an error must not replace it with stale analysis");
 
 console.log("Mobile graph synthetic contract: relationships, withdrawal, RTL IDs and abstention verified");
