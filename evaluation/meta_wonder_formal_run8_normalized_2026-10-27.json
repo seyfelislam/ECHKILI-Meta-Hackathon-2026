@@ -638,7 +638,7 @@
           }
         ],
         "labels": {
-          "e2": "e2‮4e"
+          "e2": "e2\u202e4e"
         },
         "proto": {
           "polluted": true
