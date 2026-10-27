@@ -1,0 +1,102 @@
+{
+  "fixtures": [
+    {
+      "id": "fix_01",
+      "evidence": [
+        {"id": "e1", "observation": "invented fan speed reading low in lab simulation A"},
+        {"id": "e2", "observation": "invented control signal steady in lab simulation A"},
+        {"id": "e3", "observation": "invented airflow tick low in lab simulation A"}
+      ],
+      "hypothesis_id": "h_fan_slow_01",
+      "component_id": "fan",
+      "expected_edges": [
+        {"evidence_id": "e1", "relation": "SUPPORTS"},
+        {"evidence_id": "e2", "relation": "SUPPORTS"},
+        {"evidence_id": "e3", "relation": "SUPPORTS"}
+      ],
+      "expected_state": "PROVISIONAL",
+      "missing_evidence": []
+    },
+    {
+      "id": "fix_02",
+      "evidence": [
+        {"id": "e1", "observation": "invented sensor value drifting in lab run B"},
+        {"id": "e2", "observation": "invented repeat reading matches drift in lab run B"},
+        {"id": "e3", "observation": "invented reference input stable in lab run B"}
+      ],
+      "hypothesis_id": "h_sensor_drift_01",
+      "component_id": "sensor",
+      "expected_edges": [
+        {"evidence_id": "e1", "relation": "SUPPORTS"},
+        {"evidence_id": "e2", "relation": "SUPPORTS"},
+        {"evidence_id": "e3", "relation": "SUPPORTS"}
+      ],
+      "expected_state": "PROVISIONAL",
+      "missing_evidence": ["invented calibration check"]
+    },
+    {
+      "id": "fix_03",
+      "evidence": [
+        {"id": "e1", "observation": "invented wire continuity test passes in mockup C"},
+        {"id": "e2", "observation": "invented voltage drop high in mockup C"},
+        {"id": "e3", "observation": "invented wiggle test shows fluctuation in mockup C"}
+      ],
+      "hypothesis_id": "h_wire_fault_01",
+      "component_id": "wire",
+      "expected_edges": [
+        {"evidence_id": "e1", "relation": "CONTRADICTS"},
+        {"evidence_id": "e2", "relation": "SUPPORTS"},
+        {"evidence_id": "e3", "relation": "SUPPORTS"}
+      ],
+      "expected_state": "HUMAN_REVIEW",
+      "missing_evidence": ["invented load test"]
+    },
+    {
+      "id": "fix_04",
+      "evidence": [
+        {"id": "e1", "observation": "invented control output on in scenario D"},
+        {"id": "e2", "observation": "invented downstream indicator off in scenario D"},
+        {"id": "e3", "observation": "invented manual override indicator on in scenario D"}
+      ],
+      "hypothesis_id": "h_control_mismatch_01",
+      "component_id": "control",
+      "expected_edges": [
+        {"evidence_id": "e1", "relation": "SUPPORTS"},
+        {"evidence_id": "e2", "relation": "CONTRADICTS"},
+        {"evidence_id": "e3", "relation": "SUPPORTS"}
+      ],
+      "expected_state": "HUMAN_REVIEW",
+      "missing_evidence": ["invented logic trace"]
+    },
+    {
+      "id": "fix_05",
+      "evidence": [
+        {"id": "e1", "observation": "invented single fan noise note in toy log E"},
+        {"id": "e2", "observation": "invented ambient room note unrelated in toy log E"},
+        {"id": "e3", "observation": "invented placeholder entry with no reading in toy log E"}
+      ],
+      "hypothesis_id": "h_fan_noise_01",
+      "component_id": "fan",
+      "expected_edges": [
+        {"evidence_id": "e1", "relation": "SUPPORTS"}
+      ],
+      "expected_state": "ABSTAIN",
+      "missing_evidence": ["invented repeat measurement", "invented control signal capture"]
+    },
+    {
+      "id": "fix_06",
+      "evidence": [
+        {"id": "e1", "observation": "invented lone sensor blip in toy log F"},
+        {"id": "e2", "observation": "invented unrelated fixture note in toy log F"},
+        {"id": "e3", "observation": "invented empty observation slot in toy log F"}
+      ],
+      "hypothesis_id": "h_sensor_blip_01",
+      "component_id": "sensor",
+      "expected_edges": [
+        {"evidence_id": "e1", "relation": "SUPPORTS"}
+      ],
+      "expected_state": "ABSTAIN",
+      "missing_evidence": ["invented second sample", "invented baseline comparison"]
+    }
+  ]
+}
