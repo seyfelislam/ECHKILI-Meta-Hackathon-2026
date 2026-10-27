@@ -60,6 +60,52 @@ class GraphStateTests(unittest.TestCase):
                     self.assertTrue(all(edge["source"] in nodes and edge["target"] in nodes for edge in graph["edges"]))
                     self.assertEqual({node["id"][2:] for node in graph["nodes"] if node["kind"] == "evidence"}, set(ids))
 
+    def test_graph_is_invariant_to_evidence_selection_order(self):
+        expected = analyze("cabin-climate-01", ["e1", "e2", "e3", "e4"])["graph"]
+        reversed_selection = analyze("cabin-climate-01", ["e4", "e3", "e2", "e1"])["graph"]
+        self.assertEqual(reversed_selection, expected)
+
+    def test_null_root_collections_fail_as_validation_errors(self):
+        valid_evidence = [{"id": "e1"}, {"id": "e2"}]
+        valid_hypotheses = [{"id": "h1", "label": "Fictional", "supportingEvidenceIds": ["e1", "e2"]}]
+        for field in ("selected_evidence", "hypotheses", "contradictions"):
+            kwargs = {"selected_evidence": valid_evidence, "hypotheses": valid_hypotheses, "contradictions": []}
+            kwargs[field] = None
+            with self.subTest(field=field):
+                try:
+                    build_graph(**kwargs)
+                except ValueError:
+                    continue
+                except (TypeError, KeyError) as exc:
+                    self.fail(f"{field} leaked {type(exc).__name__} instead of ValueError")
+                self.fail(f"{field}=None was accepted")
+
+    def test_missing_hypothesis_label_is_validation_error(self):
+        try:
+            build_graph(
+                selected_evidence=[{"id": "e1"}, {"id": "e2"}],
+                hypotheses=[{"id": "h1", "supportingEvidenceIds": ["e1", "e2"]}],
+                contradictions=[],
+            )
+        except ValueError:
+            return
+        except (TypeError, KeyError) as exc:
+            self.fail(f"missing label leaked {type(exc).__name__} instead of ValueError")
+        self.fail("missing hypothesis label was accepted")
+
+    def test_direction_override_in_graph_labels_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "direction control"):
+            build_graph(
+                selected_evidence=[{"id": "e1", "title": "Record A\u202eevitpeceD"}],
+                hypotheses=[], contradictions=[],
+            )
+        with self.assertRaisesRegex(ValueError, "direction control"):
+            build_graph(
+                selected_evidence=[{"id": "e1"}, {"id": "e2"}],
+                hypotheses=[{"id": "h1", "label": "Claim \u202ehidden", "supportingEvidenceIds": ["e1", "e2"]}],
+                contradictions=[],
+            )
+
     def test_graph_builder_rejects_unknown_evidence_reference(self):
         with self.assertRaisesRegex(ValueError, "unknown evidence"):
             build_graph(
