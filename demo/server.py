@@ -17,6 +17,7 @@ FILES = {
     "/styles.css": ("styles.css", "text/css; charset=utf-8"),
     "/graph-i18n.js": ("graph-i18n.js", "text/javascript; charset=utf-8"),
     "/result-i18n.js": ("result-i18n.js", "text/javascript; charset=utf-8"),
+    "/site-i18n.js": ("site-i18n.js", "text/javascript; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
 }
 MAX_BODY = 2048
