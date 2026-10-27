@@ -1,0 +1,123 @@
+{
+  "findings": [
+    {
+      "id": "F1",
+      "priority": "P0",
+      "rootCause": "drawGraph builds full SVG even when CSS <=700px sets display:none",
+      "userHarm": "360px phone pays DOM cost for 500 nodes and 500 paths but sees only cards",
+      "counterexample": "If Node DOM shows 0 svg and 0 path nodes at 360px initial, finding is false"
+    },
+    {
+      "id": "F2",
+      "priority": "P0",
+      "rootCause": "No breakpoint-crossing re-render on resize or 200% zoom after initial render",
+      "userHarm": "Mobile-to-desktop stays card-only; desktop-to-mobile keeps ~21000-unit hidden SVG in DOM",
+      "counterexample": "If crossing 700px both ways swaps SVG presence without data loss, finding is false"
+    },
+    {
+      "id": "F3",
+      "priority": "P1",
+      "rootCause": "SVG height max(300,88+70*max(evidenceCount,conclusionCount)) unbounded, ~21088 units for 200/300 nodes",
+      "userHarm": "Desktop giant graph causes extreme scroll, lost focus, motion discomfort, hard audit",
+      "counterexample": "If 500-node DOM stays contained with full card count and visible total, finding is false"
+    },
+    {
+      "id": "F4",
+      "priority": "P1",
+      "rootCause": "ar locale may render technical IDs e1-e4/h-flow without LTR isolate and mix view copy with canonical data",
+      "userHarm": "Arabic RTL users see garbled IDs and cannot reliably cite evidence",
+      "counterexample": "If ar DOM wraps every ID in dir=ltr isolate and canonical JSON unchanged, finding is false"
+    },
+    {
+      "id": "F5",
+      "priority": "P1",
+      "rootCause": "SVG and transcript cards can double-announce or lose SUPPORTS/CONTRADICTS plus HUMAN_REVIEW semantics and focus on re-render",
+      "userHarm": "Screen-reader and keyboard users miss contradiction review or lose place",
+      "counterexample": "If SVG is labelled or hidden correctly and cards preserve relation text plus focus, finding is false"
+    }
+  ],
+  "minimalPlan": [
+    {
+      "id": "M1",
+      "change": "Gate only SVG creation on matchMedia min-width 701px; always render node items and relation cards from same validated edges",
+      "tradeoff": "Adds viewport branch but saves hidden SVG work; needs correct re-render on crossing",
+      "rolloutGate": "Node DOM-contract: 360px has 0 svg/path, full cards; desktop has svg plus same cards; canonical JSON unchanged"
+    },
+    {
+      "id": "M2",
+      "change": "Add single matchMedia change plus debounced resize handler that re-renders display only on breakpoint crossing, preserves focus and scroll, no reanalysis or fetch",
+      "tradeoff": "Small listener complexity; must avoid duplicate handlers and focus loss",
+      "rolloutGate": "Offline resize both ways restores correct view with identical card count and zero network calls"
+    },
+    {
+      "id": "M3",
+      "change": "Harden audit-a11y: SVG role img with label and aria-hidden when hidden, cards as primary, LTR isolates for IDs, focus management, reduced-motion, scroll container for tall SVG with visible counts not truncation",
+      "tradeoff": "More markup and CSS, no inference change; tall graph still large but navigable",
+      "rolloutGate": "Node checks for isolates, labels, counts, focus target; no invented or dropped edges"
+    }
+  ],
+  "offlineTests": [
+    {
+      "id": "T1",
+      "setup": "360px initial with fictional e1-e4 plus h-flow/h-intermittent",
+      "expected": "0 svg paths, node items and relation cards equal validated counts",
+      "falsifier": "Any path element present fails mobile gate"
+    },
+    {
+      "id": "T2",
+      "setup": "Start 360px then expand to desktop and re-invoke display switch",
+      "expected": "SVG with 900-unit width and valid-edge paths appears, cards unchanged",
+      "falsifier": "Missing SVG or changed cards fails restore"
+    },
+    {
+      "id": "T3",
+      "setup": "Start desktop then shrink to 360px",
+      "expected": "SVG removed or empty, cards remain full and canonical data intact",
+      "falsifier": "Hidden 21000-unit SVG still in DOM fails cleanup"
+    },
+    {
+      "id": "T4",
+      "setup": "Simulate 200% zoom reducing CSS pixels across 700px breakpoint",
+      "expected": "Same as resize: view switches by breakpoint, no reanalysis",
+      "falsifier": "Stale view after zoom fails breakpoint logic"
+    },
+    {
+      "id": "T5",
+      "setup": "Synthetic 200 evidence plus 300 hypotheses with 500 valid edges",
+      "expected": "500 relation cards, path count equals valid edges, total disclosed",
+      "falsifier": "Fewer cards or paths than valid edges means truncation or invention"
+    },
+    {
+      "id": "T6",
+      "setup": "Inject malformed and dangling edges with unknown node refs",
+      "expected": "Invalid edges skipped, valid cards and paths unchanged, warning count shown",
+      "falsifier": "Crash, invented edge, or dropped valid card fails validation"
+    },
+    {
+      "id": "T7",
+      "setup": "Set locale ar with fictional IDs and move focus through cards",
+      "expected": "IDs wrapped in LTR isolate, copy translated, focus order intact",
+      "falsifier": "Unisolated ID or focus loss fails RTL check"
+    },
+    {
+      "id": "T8",
+      "setup": "Fire 20 rapid resizes across breakpoint with fetch spy",
+      "expected": "One active listener, single final render, zero fetch or analysis calls",
+      "falsifier": "Duplicate handlers or any network call fails safety"
+    }
+  ],
+  "a11yChecklist": [
+    "Simulated Node: cards readable single-column at 360px width; needs live 360px phone check",
+    "Simulated Node: layout switches at 200% zoom breakpoint; needs live browser 200% zoom check",
+    "Simulated DOM: hidden SVG has no AT announcement, desktop SVG has label; needs real screen-reader test",
+    "Simulated DOM: focus preserved and visible after breakpoint re-render; needs live keyboard test",
+    "Simulated media query: prefers-reduced-motion disables smooth scroll and transitions; needs live OS setting test",
+    "Simulated DOM: Arabic IDs in LTR isolates with en/fr/ar copy only; needs real Arabic screen-reader test"
+  ],
+  "rejectedShortcuts": [
+    "Never build SVG on mobile without restore: breaks zoom and resize to desktop audit.",
+    "Silently truncate giant graph to top N: hides evidence and breaks auditability.",
+    "Add heavy graph library or virtualization without transcript fallback: harms 360px use and accessibility.",
+    "Re-fetch or re-run analysis on resize or translate technical IDs: risks network cost and data corruption."
+  ]
+}
