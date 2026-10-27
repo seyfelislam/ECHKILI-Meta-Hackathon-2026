@@ -7,6 +7,7 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 const i18n = require("../demo/static/graph-i18n.js");
 const resultI18n = require("../demo/static/result-i18n.js");
+const siteI18n = require("../demo/static/site-i18n.js");
 
 class Node {
   constructor(tag = "div") {
@@ -27,11 +28,17 @@ class Node {
   append(...items) {this.children.push(...items);}
   replaceChildren(...items) {this.children = [...items];}
   addEventListener(key, callback) {this.handlers[key] = callback;}
-  querySelectorAll() {return [];}
+  querySelectorAll(selector) {
+    const visit = (root) => root.children.flatMap(child => [child, ...visit(child)]);
+    if (selector === "input:checked") return visit(this).filter(n => n.tag === "input" && n.checked);
+    if (selector === "input") return visit(this).filter(n => n.tag === "input");
+    return [];
+  }
   querySelector() {if (!this.singleChild) this.singleChild = {textContent: ""}; return this.singleChild;}
 }
 
 const items = new Map();
+const siteNodes = [];
 function id(name) {
   if (!items.has(name)) items.set(name, new Node());
   return items.get(name);
@@ -40,16 +47,38 @@ const doc = {
   getElementById: id,
   createElement: (tag) => new Node(tag),
   createElementNS: (_ns, tag) => new Node(tag),
+  querySelectorAll: (selector) => selector === "[data-site-key]" ? siteNodes : [],
 };
+const heroCopy = id("synthetic-hero-lead");
+heroCopy.getAttribute = () => "heroLead";
+siteNodes.push(heroCopy);
 let networkCalls = 0;
 const ctx = {
   document: doc,
-  window: {ECHKILI_GRAPH_I18N: i18n, ECHKILI_RESULT_I18N: resultI18n},
+  window: {ECHKILI_GRAPH_I18N: i18n, ECHKILI_RESULT_I18N: resultI18n, ECHKILI_SITE_I18N: siteI18n},
   fetch: () => {networkCalls++; return new Promise(() => {});},
   console,
 };
 vm.createContext(ctx);
 vm.runInContext(fs.readFileSync("demo/static/app.js", "utf8"), ctx);
+
+// Display localization is not allowed to alter selected canonical IDs.
+ctx.__scenario = {id:"cabin-climate-01",evidence:[{id:"e1",title:"Warm outlet report",
+  observation:"A simulated passenger note describes warmer-than-expected outlet air.",source:"Invented passenger note"}]};
+vm.runInContext("scenario = __scenario; renderEvidenceOptions()", ctx);
+id("evidence-list").children[0].children[0].checked = true;
+id("graph-locale").value = "ar";
+id("graph-locale").handlers.change();
+assert.equal(id("case-title").textContent, siteI18n.fixtureText("ar","caseTitle"));
+assert.equal(heroCopy.textContent, siteI18n.staticCopy.ar.heroLead);
+assert.equal(id("evidence-list").children[0].children[1].children[0].children[1].textContent,
+  siteI18n.fixtureText("ar","e1","title"));
+assert.equal(id("evidence-list").children[0].children[0].checked, true,
+  "switching locale must keep user-selected fictional evidence checked");
+assert.equal(id("story-progress").textContent, siteI18n.staticCopy.ar.storyReady);
+assert(id("selection-count").textContent.includes("1"), "selected count must remain visible");
+id("graph-locale").value = "en";
+id("graph-locale").handlers.change();
 
 // The untranslated empty/waiting state is the first impression at mobile
 // width; switching languages before an analysis must translate that shell.
