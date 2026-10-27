@@ -152,9 +152,28 @@ function drawGraph(data, earlier, comparison) {
   }));
   spread(evidence, 175);
   spread(conclusions, 638);
-  // Count only links with two known graph endpoints in both renderers and
-  // in the spoken summary. Never invent nodes to satisfy a dangling link.
-  const visibleEdges = graph.edges.filter((edge) => position.has(edge.source) && position.has(edge.target));
+  // An edge must agree with both its node endpoints AND the cited evidence
+  // IDs. Mismatched metadata could otherwise draw one pair but narrate a
+  // different pair — a dangerous failure for an evidence-focused interface.
+  const nodeById = new Map(all.map((item) => [item.id, item]));
+  const visibleEdges = graph.edges.filter((edge) => {
+    if (!edge || typeof edge !== "object") return false;
+    const source = nodeById.get(edge.source);
+    const target = nodeById.get(edge.target);
+    if (!source || !target || !position.has(edge.source) || !position.has(edge.target)) return false;
+    if (edge.relation === "SUPPORTS") {
+      return source.kind === "evidence" && target.kind === "hypothesis" &&
+        source.id === `e:${source.sourceId}` && edge.evidenceId === source.sourceId;
+    }
+    if (edge.relation === "CONTRADICTS") {
+      if (source.kind !== "evidence" || target.kind !== "evidence" ||
+          source.id !== `e:${source.sourceId}` || target.id !== `e:${target.sourceId}` ||
+          !Array.isArray(edge.evidenceIds) || edge.evidenceIds.length !== 2) return false;
+      return (edge.evidenceIds[0] === source.sourceId && edge.evidenceIds[1] === target.sourceId) ||
+        (edge.evidenceIds[1] === source.sourceId && edge.evidenceIds[0] === target.sourceId);
+    }
+    return false;
+  });
 
   const svg = svgElement("svg", {
     viewBox: `0 0 900 ${height}`,
