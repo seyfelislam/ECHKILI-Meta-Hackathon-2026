@@ -11,7 +11,7 @@ An **offline-first, intentionally limited fictional vehicle-cabin diagnostics de
 - Explicit contradiction detection and cautious human review.
 - A server-audited **before/after evidence trace** that explicitly names new evidence, newly surfaced conflicts, and withdrawn hypotheses.
 - A **three-step judge demo** (initial observations → corroboration → conflicting report and human review), with no Meta requests.
-- A visual, source-cited **evidence graph** with a language switch for **English, French, and Arabic**; Arabic copy uses RTL while technical IDs stay LTR.
+- A visual, source-cited **evidence graph and analysis-result panel** sharing one language switch for **English, French, and Arabic**; Arabic copy uses RTL while technical IDs and changing numeric tokens stay LTR.
 - An always-visible uncertainty indicator (illustrative, **not** calibrated).
 - A separate, optional Meta Model API enrichment path that is **disabled by default**.
 
@@ -48,7 +48,7 @@ The benchmark exhausts all 16 subsets of the **four fictional** observations plu
 
 The additional [six-case synthetic graph pack](evaluation/meta_graph_fixtures.json) was generated during a **separate, manually authorized Meta Playground experiment** on 27 October 2026 and checked with nine offline tests. Its graph references and cautious presentation states are validated by [`evaluation/graph_fixtures.py`](evaluation/graph_fixtures.py); none of its observations should be mistaken for real measurements. See the [experiment log](docs/META_GRAPH_LIVE_TEST_2026-10-27.md).
 
-The graph-panel language pack was adapted from a separate **Muse Spark 1.3** synthetic-copy experiment. The translated strings were manually reviewed and exercise four offline i18n tests plus an HTTP asset test. Only the graph panel is localized; the entire prototype is **not** yet multilingual. See [Spark review](docs/META_SPARK_GRAPH_I18N_2026-10-27.md).
+The graph language pack came from a **Muse Spark 1.3** synthetic-copy experiment ([Spark review](docs/META_SPARK_GRAPH_I18N_2026-10-27.md)). The principal **results-panel headings, caution, conflict/review banners, change summary, optional remote-note separation and analyze control** now use a separate, human-reviewed **Muse Wonder 1.0** English/French/Arabic copy pack ([tenth Meta review](docs/META_WONDER_RESULT_I18N_2026-10-27.md)), with LTR `<bdi>` elements for Arabic technical identifiers and numbers. The scenario introduction, English-only synthetic source labels/explanations, guided-story chrome, and other site copy are **not yet fully localized**; this is not a claim of complete internationalization or screen-reader certification.
 
 No model calls are made during tests. Integration tests only use a local loopback HTTP server.
 
