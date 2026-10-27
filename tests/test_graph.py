@@ -82,6 +82,39 @@ class GraphStateTests(unittest.TestCase):
         self.assertEqual({node["id"] for node in after["nodes"] if node["kind"] == "hypothesis"}, {"h:h1"})
         self.assertEqual({edge["target"] for edge in after["edges"] if edge["relation"] == "SUPPORTS"}, {"h:h1"})
 
+    def test_wonder_high_t06_rejects_empty_hypothesis_id(self):
+        with self.assertRaisesRegex(ValueError, "invalid hypothesis id"):
+            build_graph(
+                selected_evidence=[{"id": "e1"}, {"id": "e2"}],
+                hypotheses=[{"id": "", "label": "Fictional", "supportingEvidenceIds": ["e1", "e2"]}],
+                contradictions=[],
+            )
+
+    def test_wonder_high_t16_rejects_numeric_hypothesis_id(self):
+        with self.assertRaisesRegex(ValueError, "invalid hypothesis id"):
+            build_graph(
+                selected_evidence=[{"id": "e1"}, {"id": "e2"}],
+                hypotheses=[{"id": 123, "label": "Fictional", "supportingEvidenceIds": ["e1", "e2"]}],
+                contradictions=[],
+            )
+
+    def test_wonder_high_t02_rejects_reversed_duplicate_contradiction(self):
+        with self.assertRaisesRegex(ValueError, "duplicate contradiction"):
+            build_graph(
+                selected_evidence=[{"id": identifier} for identifier in ("e1", "e2", "e3", "e4")],
+                hypotheses=[{"id": "h1", "label": "Unrelated", "supportingEvidenceIds": ["e3", "e4"]}],
+                contradictions=[{"evidenceIds": ["e1", "e2"]}, {"evidenceIds": ["e2", "e1"]}],
+            )
+
+    def test_wonder_high_t10_rejects_scalar_evidence_with_value_error(self):
+        try:
+            build_graph(selected_evidence=[123, {"id": "e1"}], hypotheses=[], contradictions=[])
+        except ValueError:
+            return
+        except (TypeError, KeyError) as exc:
+            self.fail(f"Unvalidated input leaked {type(exc).__name__} instead of ValueError")
+        self.fail("Scalar evidence input was accepted")
+
 
 if __name__ == "__main__":
     unittest.main()
