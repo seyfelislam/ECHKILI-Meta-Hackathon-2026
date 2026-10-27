@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="620" viewBox="0 0 900 620">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M 0 0 L 9 3 L 0 6 z" fill="#56dccf"/>
+    </marker>
+    <style>
+      text{font-family:DejaVu Sans,Arial,sans-serif;fill:#edf3ff}
+      .small{font-size:13px;fill:#b9c8df}
+      .heading{font-size:23px;font-weight:bold}
+      .id{font-size:14px;font-weight:bold;fill:#c6b9ff}
+      .node{fill:#1e2744;stroke:#a992ff;stroke-width:2}
+      .hyp{fill:#17353f;stroke:#56dccf;stroke-width:2}
+      .ghost{fill:#302634;stroke:#f7b8a6;stroke-width:2;stroke-dasharray:7 5}
+    </style>
+  </defs>
+  <rect x="0" y="0" width="900" height="620" fill="#10192d"/>
+  <text class="heading" x="44" y="47">ECHKILI Evidence Lab — fictional graph</text>
+  <text class="small" x="44" y="77">Synthetic labels only • No mechanical diagnosis • Human review required for conflicts</text>
+  <text class="small" x="55" y="117">SELECTED OBSERVATIONS</text>
+  <text class="small" x="612" y="117">PRESENTATION STATES</text>
+  <g>
+    <rect class="node" x="44" y="136" width="245" height="69" rx="11"/>
+    <text class="id" x="60" y="162">e1</text><text x="60" y="187">Record A (fictional)</text>
+    <rect class="node" x="44" y="232" width="245" height="69" rx="11"/>
+    <text class="id" x="60" y="258">e2</text><text x="60" y="283">Record B (fictional)</text>
+    <rect class="node" x="44" y="328" width="245" height="69" rx="11"/>
+    <text class="id" x="60" y="354">e3</text><text x="60" y="379">Record C (fictional)</text>
+    <rect class="node" x="44" y="424" width="245" height="69" rx="11"/>
+    <text class="id" x="60" y="450">e4</text><text x="60" y="475">Record D (fictional)</text>
+  </g>
+  <path d="M289 266 C426 266 469 235 611 235" fill="none" stroke="#56dccf" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M289 362 C438 362 470 259 611 259" fill="none" stroke="#56dccf" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M169 205 C358 213 360 418 169 424" fill="none" stroke="#f7b8a6" stroke-width="3.5" stroke-dasharray="8 6"/>
+  <text class="small" x="337" y="331">CONTRADICTS</text>
+  <rect class="hyp" x="611" y="196" width="248" height="86" rx="12"/>
+  <text x="629" y="225" style="font-size:13px;fill:#56dccf">PROVISIONAL · UNVERIFIED</text>
+  <text x="629" y="255" style="font-size:17px">h2 — Explanation B</text>
+  <rect class="ghost" x="611" y="345" width="248" height="86" rx="12"/>
+  <text x="629" y="375" style="font-size:13px;fill:#f7b8a6">WITHDRAWN AFTER CONFLICT</text>
+  <text x="629" y="404" style="font-size:17px">h1 — Explanation A</text>
+  <rect x="611" y="466" width="248" height="77" rx="12" fill="#50312c" stroke="#ffba95" stroke-width="2"/>
+  <text x="629" y="493" style="font-size:13px;fill:#ffd0b4">GLOBAL STATE</text>
+  <text x="629" y="522" style="font-size:18px;font-weight:bold">HUMAN_REVIEW</text>
+  <line x1="44" y1="558" x2="856" y2="558" stroke="#32415c"/>
+  <text class="small" x="44" y="589">Solid teal = evidence support</text>
+  <text class="small" x="364" y="589">Dashed peach = conflicting evidence</text>
+</svg>
