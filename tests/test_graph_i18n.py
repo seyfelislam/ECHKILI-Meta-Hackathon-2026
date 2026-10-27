@@ -17,6 +17,9 @@ class GraphMarkupParser(HTMLParser):
         self.scripts = []
         self.locale_options = []
         self.in_locale_select = False
+        self.locale_select_attributes = None
+        self.in_locale_label = False
+        self.locale_label_parts = []
 
     def handle_starttag(self, tag, attrs):
         props = dict(attrs)
@@ -26,12 +29,21 @@ class GraphMarkupParser(HTMLParser):
             self.scripts.append(props.get("src"))
         if tag == "select" and props.get("id") == "graph-locale":
             self.in_locale_select = True
+            self.locale_select_attributes = props
+        if tag == "label" and props.get("for") == "graph-locale":
+            self.in_locale_label = True
         if tag == "option" and self.in_locale_select:
             self.locale_options.append(props.get("value"))
 
     def handle_endtag(self, tag):
         if tag == "select":
             self.in_locale_select = False
+        if tag == "label":
+            self.in_locale_label = False
+
+    def handle_data(self, data):
+        if self.in_locale_label:
+            self.locale_label_parts.append(data)
 
 
 class GraphInternationalizationTests(unittest.TestCase):
@@ -72,6 +84,17 @@ assert.equal(graphText('unknown','statusAbstain'),locales.en.messages.statusAbst
                          "graph-legend-hypothesis", "graph-legend-conflict", "graph-transcript-title",
                          "graph-disclaimer"}.issubset(parser.ids))
         self.assertLess(parser.scripts.index("/graph-i18n.js"), parser.scripts.index("/app.js"))
+
+    def test_language_control_uses_visible_multilingual_label_as_accessible_name(self):
+        parser = GraphMarkupParser()
+        parser.feed(Path("demo/static/index.html").read_text(encoding="utf-8"))
+        self.assertIsNotNone(parser.locale_select_attributes)
+        # An English aria-label would override the visible English/French/Arabic
+        # label in the browser's accessible-name computation.
+        self.assertNotIn("aria-label", parser.locale_select_attributes)
+        visible_label = " ".join(parser.locale_label_parts)
+        for part in ("Language", "Langue", "اللغة"):
+            self.assertIn(part, visible_label)
 
     def test_controller_switches_graph_language_without_network_analysis(self):
         script = r"""
