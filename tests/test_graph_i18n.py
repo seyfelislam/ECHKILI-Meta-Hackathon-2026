@@ -85,6 +85,7 @@ assert.equal(graphText('unknown','statusAbstain'),locales.en.messages.statusAbst
                          "graph-disclaimer"}.issubset(parser.ids))
         self.assertLess(parser.scripts.index("/graph-i18n.js"), parser.scripts.index("/app.js"))
         self.assertLess(parser.scripts.index("/result-i18n.js"), parser.scripts.index("/app.js"))
+        self.assertLess(parser.scripts.index("/site-i18n.js"), parser.scripts.index("/app.js"))
 
     def test_language_control_uses_visible_multilingual_label_as_accessible_name(self):
         parser = GraphMarkupParser()
@@ -104,6 +105,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const i18n = require('./demo/static/graph-i18n.js');
 const resultI18n = require('./demo/static/result-i18n.js');
+const siteI18n = require('./demo/static/site-i18n.js');
 const elements = new Map();
 function node(id) {
   if (!elements.has(id)) elements.set(id, {
@@ -114,10 +116,10 @@ function node(id) {
   });
   return elements.get(id);
 }
-const doc = {getElementById:node, createElement:() => node('created')};
+const doc = {getElementById:node, createElement:() => node('created'), querySelectorAll:()=>[]};
 let analysisRequests = 0;
 const context = {
-  document:doc, window:{ECHKILI_GRAPH_I18N:i18n,ECHKILI_RESULT_I18N:resultI18n},
+  document:doc, window:{ECHKILI_GRAPH_I18N:i18n,ECHKILI_RESULT_I18N:resultI18n,ECHKILI_SITE_I18N:siteI18n},
   fetch:() => { analysisRequests++; return new Promise(()=>{}); },
   console
 };
