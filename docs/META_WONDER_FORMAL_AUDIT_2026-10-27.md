@@ -23,3 +23,14 @@
 - Evaluation is exhaustive only over **16 combinations of invented observations** and **32 one-step transitions**. It proves the synthetic contract, not real diagnostic accuracy, user comprehension, accessibility certification, or Meta model quality.
 - Meta's proposed fixture JSON contained a syntactic error and some overly categorical severity/independence claims. Recommendations were judged against the actual implementation, not installed automatically.
 - Review gate remains: genuine 360px and 200% browser/reflow observation, Arabic screen-reader review, IP review, and explicit merge/deployment decision.
+
+## Follow-up hardening from the same audit
+
+The eighth audit's permutation and hostile-input cases were subsequently turned into four additional red-then-green graph tests:
+
+- Graph node ordering is now stable for a given evidence set regardless of selection order.
+- Null/scalar top-level graph collections fail with `ValueError` rather than an uncaught iteration error.
+- A hypothesis without a usable label fails validation rather than leaking `KeyError`.
+- Observation and hypothesis labels containing bidi formatting overrides/isolate controls are rejected. Normal Arabic characters remain supported; generated LTR reference isolation in the UI is unchanged.
+
+The new full local suite result is **74/74**, with the Node mobile contract and JS syntax checks passing. This still does not replace genuine visual or assistive-technology QA.
