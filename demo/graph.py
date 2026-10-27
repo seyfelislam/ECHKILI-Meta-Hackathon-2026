@@ -13,7 +13,9 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
     edges = []
 
     for evidence in selected_evidence:
-        identifier = evidence["id"]
+        if not isinstance(evidence, dict):
+            raise ValueError("malformed evidence record")
+        identifier = evidence.get("id")
         if not isinstance(identifier, str) or not identifier or identifier in evidence_ids:
             raise ValueError("invalid or duplicate evidence id")
         evidence_ids.add(identifier)
@@ -26,11 +28,16 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
 
     # Validate conflicts first: contradicted sources cannot endorse active hypotheses.
     conflicted_evidence_ids = set()
+    contradiction_pairs = set()
     contradiction_edges = []
     for conflict in contradictions:
         sources = conflict["evidenceIds"]
         if len(sources) != 2 or sources[0] == sources[1] or any(source not in evidence_ids for source in sources):
             raise ValueError("unknown evidence on contradiction edge")
+        pair = frozenset(sources)
+        if pair in contradiction_pairs:
+            raise ValueError("duplicate contradiction edge")
+        contradiction_pairs.add(pair)
         conflicted_evidence_ids.update(sources)
         contradiction_edges.append({
             "source": f"e:{sources[0]}",
@@ -42,6 +49,8 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
     hypothesis_ids = set()
     for hypothesis in hypotheses:
         identifier = hypothesis["id"]
+        if not isinstance(identifier, str) or not identifier:
+            raise ValueError("invalid hypothesis id")
         if identifier in hypothesis_ids:
             raise ValueError("duplicate hypothesis id")
         hypothesis_ids.add(identifier)
