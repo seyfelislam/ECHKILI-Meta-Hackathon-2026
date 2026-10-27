@@ -44,6 +44,8 @@ python -m evaluation.benchmark
 
 The benchmark exhausts all 16 subsets of the **four fictional** observations plus all **32 directed one-evidence additions**, checking provenance, conflict escalation, abstention, and stable human-review safeguards. These are software-contract checks; they do **not** measure diagnostic accuracy, model quality, or business impact. See [judging scorecard](docs/JUDGING_SCORECARD.md).
 
+The additional [six-case synthetic graph pack](evaluation/meta_graph_fixtures.json) was generated during a **separate, manually authorized Meta Playground experiment** on 27 October 2026 and checked with nine offline tests. Its graph references and cautious presentation states are validated by [`evaluation/graph_fixtures.py`](evaluation/graph_fixtures.py); none of its observations should be mistaken for real measurements. See the [experiment log](docs/META_GRAPH_LIVE_TEST_2026-10-27.md).
+
 No model calls are made during tests. Integration tests only use a local loopback HTTP server.
 
 ## Optional Meta Model API experiment — strictly off until activated
@@ -85,4 +87,4 @@ Commercial product and intellectual property remain with their respective rights
 
 ## Ten-day delivery and validation
 
-See [the day-by-day sprint plan](docs/TEN_DAY_SPRINT.md), [Meta integration gates](docs/META_INTEGRATION.md), and the [build log](docs/BUILD_LOG.md). The public repository contains runnable demonstration code. It does not assert that a real Meta API call has happened or that a grant is activated.
+See [the day-by-day sprint plan](docs/TEN_DAY_SPRINT.md), [Meta integration gates](docs/META_INTEGRATION.md), and the [build log](docs/BUILD_LOG.md). The public repository contains runnable offline demonstration code. The separately documented manual Playground experiment is **not** a live call made by this demo, proof of production integration, or evidence of diagnostic accuracy.
