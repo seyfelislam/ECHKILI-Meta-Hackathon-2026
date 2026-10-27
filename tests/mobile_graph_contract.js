@@ -129,4 +129,37 @@ assert(id("graph-links").children.some(n => n.textContent === i18n.locales.ar.me
 const svgDesc = id("graph-canvas").children[0].children.find(n => n.tag === "desc");
 assert(svgDesc.textContent.includes("0"), "spoken graph relation count excludes skipped links");
 
+// A valid endpoint is insufficient when edge citations disagree with it.
+// Those forged claims must not be shown as if they came from selected evidence.
+ctx.__input = {
+  graph: {
+    state: "PROVISIONAL",
+    nodes: [
+      {id: "e:e1", kind: "evidence", sourceId: "e1", label: "Record A"},
+      {id: "e:e2", kind: "evidence", sourceId: "e2", label: "Record B"},
+      {id: "h:h2", kind: "hypothesis", label: "Explanation B"},
+    ],
+    edges: [{source: "e:e1", target: "h:h2", relation: "SUPPORTS", evidenceId: "e2"}],
+  },
+  hypotheses: [{id: "h2", label: "Explanation B"}],
+};
+vm.runInContext("drawGraph(__input,null,null)",ctx);
+assert.equal(relationCards().length, 0, "mismatched support evidenceId must be rejected");
+assert(id("graph-links").children.some(n => n.textContent === i18n.locales.ar.messages.noEdges));
+
+ctx.__input = {
+  graph: {
+    state: "HUMAN_REVIEW",
+    nodes: [
+      {id: "e:e1", kind: "evidence", sourceId: "e1", label: "Record A"},
+      {id: "e:e2", kind: "evidence", sourceId: "e2", label: "Record B"},
+    ],
+    edges: [{source: "e:e1", target: "e:e2", relation: "CONTRADICTS", evidenceIds: ["e1", "e3"]}],
+  },
+  hypotheses: [],
+};
+vm.runInContext("drawGraph(__input,null,null)",ctx);
+assert.equal(relationCards().length, 0, "mismatched conflict evidenceIds must be rejected");
+assert(id("graph-links").children.some(n => n.textContent === i18n.locales.ar.messages.noEdges));
+
 console.log("Mobile graph synthetic contract: relationships, withdrawal, RTL IDs and abstention verified");
