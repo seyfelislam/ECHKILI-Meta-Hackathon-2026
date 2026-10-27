@@ -6,6 +6,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const vm = require("node:vm");
 const i18n = require("../demo/static/graph-i18n.js");
+const resultI18n = require("../demo/static/result-i18n.js");
 
 class Node {
   constructor(tag = "div") {
@@ -27,7 +28,7 @@ class Node {
   replaceChildren(...items) {this.children = [...items];}
   addEventListener(key, callback) {this.handlers[key] = callback;}
   querySelectorAll() {return [];}
-  querySelector() {return {textContent: ""};}
+  querySelector() {if (!this.singleChild) this.singleChild = {textContent: ""}; return this.singleChild;}
 }
 
 const items = new Map();
@@ -40,10 +41,11 @@ const doc = {
   createElement: (tag) => new Node(tag),
   createElementNS: (_ns, tag) => new Node(tag),
 };
+let networkCalls = 0;
 const ctx = {
   document: doc,
-  window: {ECHKILI_GRAPH_I18N: i18n},
-  fetch: () => new Promise(() => {}),
+  window: {ECHKILI_GRAPH_I18N: i18n, ECHKILI_RESULT_I18N: resultI18n},
+  fetch: () => {networkCalls++; return new Promise(() => {});},
   console,
 };
 vm.createContext(ctx);
@@ -172,6 +174,8 @@ assert(id("graph-links").children.some(n => n.textContent === i18n.locales.ar.me
 
 // A fictional caution signal is not a scientific probability or confidence
 // percentage, including when the interface narrates an evidence update.
+id("graph-locale").value = "en";
+id("graph-locale").handlers.change();
 ctx.__input = {
   graph: {state: "ABSTAIN", nodes: [], edges: []},
   hypotheses: [], selectedEvidence: [{id: "e1"}], contradictions: [],
@@ -230,5 +234,43 @@ assert(remote.children.some(part => part.children.some?.(child =>
 assert.equal(relationCards().length, 0, "remote note citations must not fabricate graph edges");
 assert(id("result-mode").textContent.includes("UNVERIFIED"),
   "the summary must not imply a remote note is a verified hypothesis");
+
+// The same selection re-renders in French and Arabic without reanalysis,
+// while keeping remote notes separate and explanatory history intact.
+id("graph-locale").value = "fr";
+const networkBeforeLocaleChange = networkCalls;
+id("graph-locale").handlers.change();
+const french = id("results").children.filter(part => part.className === "result-section");
+assert(french.some(part => part.children[0].textContent === resultI18n.locales.fr.findingsTitle),
+  "locale selection must translate the real canonical results panel");
+assert(french.some(part => part.children[0].textContent === resultI18n.locales.fr.remoteNotesTitle),
+  "remote note section must have its own French heading");
+assert.equal(id("results").lang, "fr");
+assert.equal(id("results").dir, "ltr");
+
+id("graph-locale").value = "ar";
+id("graph-locale").handlers.change();
+const arabic = id("results").children.filter(part => part.className === "result-section");
+assert(arabic.some(part => part.children[0].textContent === resultI18n.locales.ar.findingsTitle),
+  "Arabic selection must translate canonical headings without changing data");
+const remoteAr = arabic.find(part => part.children[0].textContent === resultI18n.locales.ar.remoteNotesTitle);
+assert(remoteAr && !arabic.find(part => part.children[0].textContent === resultI18n.locales.ar.findingsTitle)
+  .children.some(child => child.children.some?.(sub => sub.textContent.includes("Fictional external suggestion"))),
+"remote text must remain outside canonical findings under Arabic RTL");
+assert.equal(id("results").lang, "ar");
+assert.equal(id("results").dir, "rtl");
+assert.equal(id("result-mode").textContent, resultI18n.locales.ar.modeRemoteAccepted);
+assert.equal(id("analyze-button").querySelector("span").textContent, resultI18n.locales.ar.analyzeButton,
+  "the analyze action must change language with the results, even when no new request is made");
+assert.equal(networkCalls, networkBeforeLocaleChange, "a language toggle must never call the analysis endpoint");
+assert(arabic.some(part => part.children[0].textContent === resultI18n.locales.ar.cautionTitle),
+  "uncalibrated caution label should be localized, not promoted into a probability");
+const arChange = arabic.find(part => part.children[0].textContent === resultI18n.locales.ar.changeTitle);
+assert(arChange, "retranslation must preserve the original prior-evidence delta");
+function descendants(n) {return n.children.flatMap(child => [child, ...descendants(child)]);}
+const isolated = descendants(arChange).filter(n => n.tag === "bdi" && n.attributes.dir === "ltr");
+assert(isolated.some(n => n.textContent.includes("e1") || n.textContent.includes("e2")),
+  "technical IDs need real bdi isolation inside localized changes");
+assert.equal(relationCards().length, 0, "locale changes must not fabricate graph edges for remote notes");
 
 console.log("Mobile graph synthetic contract: relationships, withdrawal, RTL IDs and abstention verified");
