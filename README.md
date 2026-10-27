@@ -11,6 +11,7 @@ An **offline-first, intentionally limited fictional vehicle-cabin diagnostics de
 - Explicit contradiction detection and cautious human review.
 - A server-audited **before/after evidence trace** that explicitly names new evidence, newly surfaced conflicts, and withdrawn hypotheses.
 - A **three-step judge demo** (initial observations → corroboration → conflicting report and human review), with no Meta requests.
+- A source-cited evidence graph with an English / French / Arabic language switch (RTL copy, LTR technical IDs).
 - An always-visible uncertainty indicator (illustrative, **not** calibrated).
 - A separate, optional Meta Model API enrichment path that is **disabled by default**.
 
@@ -32,6 +33,7 @@ Try:
 2. Observe a tentative `h-flow` hypothesis; later add a new report that conflicts with `e1`. The previously surfaced `h-flow` explanation is **withdrawn**, uncertainty rises, and the system requires qualified review.
 3. To explore manually, use **Try supporting evidence** or **Try a contradiction**, then click **Analyze selected evidence**.
 4. Deselect everything to see the demo decline to infer a diagnosis.
+5. In the graph panel, switch **Language · Langue · اللغة** to inspect the same fictional links without another model call.
 
 The guided comparison calls `/api/trace` and **never sends a Meta API request**. Manual `/api/analyze` also stays offline unless the explicit server-only opt-ins are enabled.
 
@@ -43,6 +45,8 @@ python -m evaluation.benchmark
 ```
 
 The benchmark exhausts all 16 subsets of the **four fictional** observations plus all **32 directed one-evidence additions**, checking provenance, conflict escalation, abstention, and stable human-review safeguards. These are software-contract checks; they do **not** measure diagnostic accuracy, model quality, or business impact. See [judging scorecard](docs/JUDGING_SCORECARD.md).
+
+The graph panel (not the entire page) has a reviewed language pack informed by a separate approved Muse Spark 1.3 synthetic experiment; see [experiment review](docs/META_SPARK_GRAPH_I18N_2026-10-27.md).
 
 No model calls are made during tests. Integration tests only use a local loopback HTTP server.
 
