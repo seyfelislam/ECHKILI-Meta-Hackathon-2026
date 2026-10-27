@@ -15,6 +15,13 @@ def _display_label(label: object) -> str:
     return label
 
 
+def _valid_graph_id(identifier: object) -> bool:
+    # Raw IDs are kept separate from the prefixed node IDs. Reject a colon
+    # delimiter and invisible control characters before building any links.
+    return (isinstance(identifier, str) and bool(identifier)
+            and ":" not in identifier and identifier.isprintable())
+
+
 def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradictions: list[dict]) -> dict:
     if not all(isinstance(records, list) for records in (selected_evidence, hypotheses, contradictions)):
         raise ValueError("malformed graph collections")
@@ -26,7 +33,7 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
         if not isinstance(evidence, dict):
             raise ValueError("malformed evidence record")
         identifier = evidence.get("id")
-        if not isinstance(identifier, str) or not identifier or identifier in evidence_ids:
+        if not _valid_graph_id(identifier) or identifier in evidence_ids:
             raise ValueError("invalid or duplicate evidence id")
         evidence_ids.add(identifier)
         nodes.append({
@@ -35,10 +42,6 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
             "label": _display_label(evidence.get("title") or identifier.upper()),
             "sourceId": identifier,
         })
-    # The same evidence set should yield the same graph regardless of the
-    # order in which a caller supplied its observations.
-    nodes.sort(key=lambda node: node["id"])
-
     # Validate conflicts first: contradicted sources cannot endorse active hypotheses.
     conflicted_evidence_ids = set()
     contradiction_pairs = set()
@@ -51,16 +54,16 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
             raise ValueError("malformed contradiction")
         if len(sources) != 2 or sources[0] == sources[1] or any(source not in evidence_ids for source in sources):
             raise ValueError("unknown evidence on contradiction edge")
-        pair = frozenset(sources)
+        pair = tuple(sorted(sources))
         if pair in contradiction_pairs:
             raise ValueError("duplicate contradiction edge")
         contradiction_pairs.add(pair)
         conflicted_evidence_ids.update(sources)
         contradiction_edges.append({
-            "source": f"e:{sources[0]}",
-            "target": f"e:{sources[1]}",
+            "source": f"e:{pair[0]}",
+            "target": f"e:{pair[1]}",
             "relation": "CONTRADICTS",
-            "evidenceIds": list(sources),
+            "evidenceIds": list(pair),
         })
 
     hypothesis_ids = set()
@@ -68,7 +71,7 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
         if not isinstance(hypothesis, dict):
             raise ValueError("malformed hypothesis")
         identifier = hypothesis.get("id")
-        if not isinstance(identifier, str) or not identifier:
+        if not _valid_graph_id(identifier):
             raise ValueError("invalid hypothesis id")
         if identifier in hypothesis_ids:
             raise ValueError("duplicate hypothesis id")
@@ -102,6 +105,14 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
 
     if contradictions:
         nodes.append({"id": "review", "kind": "review", "label": "Qualified human review required"})
+
+    # Normalize serialization only: the API's separate selectedEvidence list
+    # retains user order, and none of these operations change graph inference.
+    nodes.sort(key=lambda node: node["id"])
+    edges.sort(key=lambda edge: (
+        edge["relation"] != "SUPPORTS", edge["source"], edge["target"],
+        edge.get("evidenceId", ""),
+    ))
 
     return {
         "state": "HUMAN_REVIEW" if contradictions else ("PROVISIONAL" if hypotheses else "ABSTAIN"),
