@@ -152,6 +152,9 @@ function drawGraph(data, earlier, comparison) {
   }));
   spread(evidence, 175);
   spread(conclusions, 638);
+  // Count only links with two known graph endpoints in both renderers and
+  // in the spoken summary. Never invent nodes to satisfy a dangling link.
+  const visibleEdges = graph.edges.filter((edge) => position.has(edge.source) && position.has(edge.target));
 
   const svg = svgElement("svg", {
     viewBox: `0 0 900 ${height}`,
@@ -161,7 +164,7 @@ function drawGraph(data, earlier, comparison) {
   });
   svg.append(svgElement("title", {id: "evidence-graph-svg-title"}, graphCopy("svgTitle")));
   svg.append(svgElement("desc", {id: "evidence-graph-svg-desc"},
-    graphCopy("svgDescription", {count: all.length, edges: graph.edges.length, state: graphCopy(graphStateKey(graph.state))})));
+    graphCopy("svgDescription", {count: all.length, edges: visibleEdges.length, state: graphCopy(graphStateKey(graph.state))})));
 
   const labels = new Map(all.map((item) => [item.id, item.label]));
   nodes.graphLinks.replaceChildren();
@@ -174,9 +177,9 @@ function drawGraph(data, earlier, comparison) {
       ? graphCopy("ghostWithdrawn", {label: `${printedRef} — ${item.label}`})
       : `${graphCopy(item.kind === "evidence" ? "legendObservation" :
         item.kind === "hypothesis" ? "legendHypothesis" : "statusHumanReview")}: ${printedRef} — ${item.label}`;
-    nodes.graphLinks.append(element("li", "graph-transcript-node", nodeLine));
+    nodes.graphLinks.append(element("li", `graph-transcript-node${item.kind === "withdrawn" ? " graph-transcript-withdrawn" : ""}`, nodeLine));
   }
-  for (const edge of graph.edges) {
+  for (const edge of visibleEdges) {
     const source = position.get(edge.source);
     const target = position.get(edge.target);
     if (!source || !target) continue; // Never draw a fabricated endpoint.
@@ -203,10 +206,17 @@ function drawGraph(data, earlier, comparison) {
       }
     }
     const ref = edge.evidenceId || (edge.evidenceIds || []).join(" + ");
+    const targetRef = edge.target.replace(/^[eh]:/, "");
+    const visibleTarget = graphLocale === "ar" ? `\u2066${targetRef}\u2069` : targetRef;
     const sentence = conflict
       ? graphCopy("edgeConflict", {ref})
-      : graphCopy("edgeSupports", {ref, label: labels.get(edge.target)});
-    nodes.graphLinks.append(element("li", "", sentence));
+      : graphCopy("edgeSupports", {ref, label: `${visibleTarget} — ${labels.get(edge.target)}`});
+    // The mobile relation card and desktop SVG share the SAME validated edge.
+    const card = element("li", `graph-relation-card ${conflict ? "relation-conflict" : "relation-support"}`, sentence);
+    card.setAttribute("data-source", edge.source);
+    card.setAttribute("data-relation", edge.relation);
+    card.setAttribute("data-target", edge.target);
+    nodes.graphLinks.append(card);
   }
 
   for (const item of all) {
@@ -240,7 +250,7 @@ function drawGraph(data, earlier, comparison) {
     svg.append(group);
   }
 
-  if (!graph.edges.length) nodes.graphLinks.append(element("li", "", graphCopy("noEdges")));
+  if (!visibleEdges.length) nodes.graphLinks.append(element("li", "", graphCopy("noEdges")));
   nodes.graphCanvas.replaceChildren(svg);
   nodes.graphState.textContent = graphCopy(graphStateKey(graph.state));
   nodes.graphState.className = `graph-state ${graph.state.toLowerCase()}`;
