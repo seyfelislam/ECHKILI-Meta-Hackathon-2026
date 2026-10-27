@@ -53,9 +53,21 @@ const heroCopy = id("synthetic-hero-lead");
 heroCopy.getAttribute = () => "heroLead";
 siteNodes.push(heroCopy);
 let networkCalls = 0;
+const compactMedia = {
+  matches: false,
+  listeners: [],
+  addEventListener(type, callback) {
+    assert.equal(type, "change");
+    this.listeners.push(callback);
+  },
+};
 const ctx = {
   document: doc,
-  window: {ECHKILI_GRAPH_I18N: i18n, ECHKILI_RESULT_I18N: resultI18n, ECHKILI_SITE_I18N: siteI18n},
+  window: {ECHKILI_GRAPH_I18N: i18n, ECHKILI_RESULT_I18N: resultI18n, ECHKILI_SITE_I18N: siteI18n,
+    matchMedia: (query) => {
+      assert.equal(query, "(max-width: 700px)");
+      return compactMedia;
+    }},
   fetch: () => {networkCalls++; return new Promise(() => {});},
   console,
 };
@@ -322,5 +334,42 @@ id("graph-locale").value = "fr";
 id("graph-locale").handlers.change();
 assert.equal(id("results").children[0], errorCard,
   "retranslation after an error must not replace it with stale analysis");
+
+// Spark 1.3 performance audit: CSS-hidden SVG must not exist in the 360px
+// DOM, while every synthetic node and validated relationship remains listed.
+const manyNodes = [
+  ...Array.from({length: 200}, (_, i) => ({id:`e:e${i}`,kind:"evidence",sourceId:`e${i}`,label:`Record ${i}`})),
+  ...Array.from({length: 300}, (_, i) => ({id:`h:h${i}`,kind:"hypothesis",label:`Illustration ${i}`,status:"unverified"})),
+];
+const manyEdges = Array.from({length: 600}, (_, i) => ({
+  source:`e:e${i%200}`,target:`h:h${Math.floor(i/2)}`,relation:"SUPPORTS",evidenceId:`e${i%200}`,
+}));
+const manyData = {graph:{state:"PROVISIONAL",nodes:manyNodes,edges:manyEdges},hypotheses:[]};
+const baselineNetworkCalls = networkCalls;
+compactMedia.matches = true;
+ctx.__input = manyData;
+vm.runInContext("drawGraph(__input,null,null)",ctx);
+assert.equal(id("graph-canvas").children.length,0,
+  "compact view must not build a huge SVG that CSS then hides");
+assert.equal(relationCards().length,600,"compact transcript cannot drop validated relations");
+assert.equal(id("graph-links").children.length,1100,"all 500 graph nodes and 600 relations remain inspectable");
+assert.equal(compactMedia.listeners.length,1,"register one layout-change handler, not one per rendering");
+const cardRefs = relationCards().map(card => [card.attributes["data-source"],card.attributes["data-target"]]);
+
+// Simulated CSS-breakpoint changes stand in for resizing and zoom: they must
+// redraw display-only views, never fetch or mutate the underlying graph.
+compactMedia.matches = false;
+compactMedia.listeners[0]();
+const desktopSvg = id("graph-canvas").children[0];
+assert.equal(desktopSvg.tag,"svg","expanding to desktop must restore the graph overview");
+assert.equal(desktopSvg.children.filter(child => child.tag === "path").length,600,
+  "desktop SVG must draw one path per validated relation");
+assert.deepEqual(relationCards().map(card => [card.attributes["data-source"],card.attributes["data-target"]]),cardRefs);
+compactMedia.matches = true;
+compactMedia.listeners[0]();
+assert.equal(id("graph-canvas").children.length,0,"returning to phone width must remove the large SVG");
+assert.equal(relationCards().length,600,"desktop-to-mobile transition must retain all relation cards");
+assert.equal(networkCalls,baselineNetworkCalls,"layout/zoom changes must not trigger another analysis request");
+assert.equal(compactMedia.listeners.length,1,"layout changes must not attach duplicate event handlers");
 
 console.log("Mobile graph synthetic contract: relationships, withdrawal, RTL IDs and abstention verified");
