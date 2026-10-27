@@ -1,0 +1,93 @@
+{
+  "locales": {
+    "en": {
+      "dir": "ltr",
+      "messages": {
+        "graphTitle": "Evidence Graph — Demo",
+        "graphIntro": "Fictional demo with evidence e1-e5 and hypotheses h1-h3. Contradictory or uncertain evidence cannot establish a real cause.",
+        "legendObservation": "Observation",
+        "legendHypothesis": "Hypothesis",
+        "legendConflict": "Conflict",
+        "transcriptTitle": "Text transcript",
+        "disclaimer": "Fictional teaching demo only. Not a diagnosis, repair advice, or safety clearance.",
+        "statusAbstain": "Abstain",
+        "statusProvisional": "Provisional",
+        "statusHumanReview": "Human review",
+        "svgTitle": "Evidence graph diagram",
+        "svgDescription": "Synthetic graph with {count} nodes, {edges} edges, state: {state}.",
+        "edgeSupports": "{ref} supports {label}",
+        "edgeConflict": "{ref} contradicts",
+        "ghostWithdrawn": "{label} withdrawn",
+        "noEdges": "No links to display."
+      }
+    },
+    "fr": {
+      "dir": "ltr",
+      "messages": {
+        "graphTitle": "Graphe de preuves — Démo",
+        "graphIntro": "Démo fictive avec preuves e1-e5 et hypothèses h1-h3. Des preuves contradictoires ou incertaines ne peuvent établir une cause réelle.",
+        "legendObservation": "Observation",
+        "legendHypothesis": "Hypothèse",
+        "legendConflict": "Conflit",
+        "transcriptTitle": "Transcription texte",
+        "disclaimer": "Démo pédagogique fictive uniquement. Ni diagnostic, ni conseil de réparation, ni autorisation de sécurité.",
+        "statusAbstain": "Abstention",
+        "statusProvisional": "Provisoire",
+        "statusHumanReview": "Révision humaine",
+        "svgTitle": "Schéma du graphe de preuves",
+        "svgDescription": "Graphe fictif avec {count} nœuds, {edges} liens, état : {state}.",
+        "edgeSupports": "{ref} soutient {label}",
+        "edgeConflict": "{ref} contredit",
+        "ghostWithdrawn": "{label} retiré",
+        "noEdges": "Aucun lien à afficher."
+      }
+    },
+    "ar": {
+      "dir": "rtl",
+      "messages": {
+        "graphTitle": "مخطط الأدلة — عرض تجريبي",
+        "graphIntro": "عرض خيالي بأدلة e1-e5 وفرضيات h1-h3. الأدلة المتضاربة أو غير المؤكدة لا يمكن أن تثبت سببا حقيقيا.",
+        "legendObservation": "ملاحظة",
+        "legendHypothesis": "فرضية",
+        "legendConflict": "تعارض",
+        "transcriptTitle": "نص بديل",
+        "disclaimer": "عرض تعليمي خيالي فقط. ليس تشخيصا ولا توصية إصلاح ولا تصريح سلامة.",
+        "statusAbstain": "امتناع",
+        "statusProvisional": "مؤقت",
+        "statusHumanReview": "مراجعة بشرية",
+        "svgTitle": "مخطط بياني للأدلة",
+        "svgDescription": "مخطط اصطناعي يضم {count} عقدا و{edges} روابط والحالة: {state}.",
+        "edgeSupports": "{ref} يدعم {label}",
+        "edgeConflict": "{ref} يتعارض",
+        "ghostWithdrawn": "{label} مسحوب",
+        "noEdges": "لا توجد روابط للعرض."
+      }
+    }
+  },
+  "qaChecks": [
+    {
+      "id": "rtl-ltr-ids",
+      "assertion": "In RTL Arabic text, technical IDs e1-e5 and h1-h3 stay left-to-right isolated and readable."
+    },
+    {
+      "id": "color-independent",
+      "assertion": "Legend and transcript identify observation, hypothesis and conflict by text and shape, not by color alone."
+    },
+    {
+      "id": "no-id-translation",
+      "assertion": "Evidence IDs e1-e5 and hypothesis IDs h1-h3 are never translated, transliterated, or localized."
+    },
+    {
+      "id": "conflict-not-cause",
+      "assertion": "Conflict, abstain, provisional and human-review states are never presented as a final cause or validated result."
+    },
+    {
+      "id": "aria-live-summary",
+      "assertion": "Graph summaries and state changes use aria-live with svgTitle and svgDescription for screen readers."
+    },
+    {
+      "id": "escape-safe",
+      "assertion": "All ref and label values render as escape-safe plain text with no HTML injection."
+    }
+  ]
+}
