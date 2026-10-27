@@ -9,6 +9,7 @@ class ResultInternationalizationTests(unittest.TestCase):
         script = r"""
 const assert = require('node:assert/strict');
 const {locales, resultText} = require('./demo/static/result-i18n.js');
+const resultPack = require('./demo/static/result-i18n.js');
 const expected = [
   'modeOffline','modeRemoteAccepted','modeRemoteRejected','cautionTitle',
   'cautionBody','findingsTitle','insufficientTitle','insufficientBody',
@@ -41,6 +42,14 @@ assert(!locales.fr.verificationUnverified.includes('source unique'),
   'do not falsely say every unverified finding has a single citation');
 assert(!locales.ar.remoteNotesBody.includes('معطَّل'),
   'an actually visible remote-note section must not claim it is disabled');
+for (const lang of ['en','fr','ar']) {
+  assert.deepEqual(Object.keys(resultPack.shell[lang]).sort(),
+    ['resultsTitle','waiting','emptyTitle','emptyBody','graphJump'].sort());
+  for (const key of Object.keys(resultPack.shell[lang])) {
+    assert.equal(resultPack.resultShellText(lang,key),resultPack.shell[lang][key]);
+    assert(!/[\u202a-\u202e\u2066-\u2069]/.test(resultPack.shell[lang][key]));
+  }
+}
 """
         result = subprocess.run(["node", "-e", script], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
