@@ -2,6 +2,7 @@
 import unittest
 from unittest.mock import patch
 
+from demo.reasoning import analyze as real_analyze
 from evaluation.benchmark import evaluate
 
 
@@ -36,6 +37,19 @@ class BenchmarkTests(unittest.TestCase):
     def test_has_no_contract_failures(self):
         self.assertFalse(self.report["failures"])
         self.assertEqual(self.report["metrics"]["contract_pass"], 16)
+
+    def test_benchmark_rejects_unqualified_hypothesis_during_human_review(self):
+        def unsafe_analyze(case_id, evidence_ids):
+            result = real_analyze(case_id, evidence_ids)
+            if set(evidence_ids) == {"e1", "e2", "e3", "e4"}:
+                result["hypotheses"][0]["status"] = "unverified"
+            return result
+
+        with patch("evaluation.benchmark.analyze", side_effect=unsafe_analyze):
+            report = evaluate()
+        self.assertEqual(report["metrics"]["traceable"], 15)
+        self.assertTrue(any(failure.get("selectedEvidenceIds") == ["e1", "e2", "e3", "e4"]
+                            for failure in report["failures"]))
 
 
 if __name__ == "__main__":
