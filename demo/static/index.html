@@ -77,12 +77,35 @@
                 <span id="result-mode" class="mode-pill">WAITING FOR INPUT</span>
               </div>
               <p class="panel-intro">Every proposed explanation links back to specific selected evidence. Uncertainty remains visible.</p>
+              <a id="graph-jump" class="graph-jump" href="#graph-panel" hidden>View live evidence graph <span aria-hidden="true">↓</span></a>
               <div id="results" class="results" aria-live="polite" aria-atomic="false">
                 <div class="empty-state" id="empty-state"><span class="empty-graphic" aria-hidden="true">◇</span><h4>Your evidence, your insight.</h4><p>Select observations and run the analysis to see a transparent reasoning trace.</p></div>
               </div>
             </div>
           </section>
         </div>
+
+        <section id="graph-panel" class="graph-panel" aria-labelledby="graph-title" hidden>
+          <div class="graph-heading">
+            <div>
+              <span class="section-step">EXPERIMENT 002 · EXPLAINABLE GRAPH</span>
+              <h3 id="graph-title">Follow the evidence.</h3>
+              <p>Every connection has a visible source. Contradictions never disappear behind a confident answer.</p>
+            </div>
+            <span id="graph-state" class="graph-state">AWAITING EVIDENCE</span>
+          </div>
+          <div class="graph-legend" aria-label="Graph key">
+            <span><i class="legend-dot evidence" aria-hidden="true"></i> Observation</span>
+            <span><i class="legend-dot hypothesis" aria-hidden="true"></i> Provisional explanation</span>
+            <span><i class="legend-dot conflict" aria-hidden="true"></i> Conflict / withdrawal</span>
+          </div>
+          <div id="graph-canvas" class="graph-canvas" aria-label="Visual evidence graph"></div>
+          <div class="graph-transcript">
+            <h4>Readable evidence connections</h4>
+            <ul id="graph-links"></ul>
+          </div>
+          <p class="graph-disclaimer">Fictional illustration, not validated vehicle diagnosis. A connection is not proof of causation.</p>
+        </section>
       </section>
 
       <section class="below" aria-label="Project principles">
