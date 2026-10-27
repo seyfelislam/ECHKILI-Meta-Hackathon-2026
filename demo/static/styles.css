@@ -48,3 +48,16 @@
 .legend-dot.conflict{width:11px;height:11px;border:2px dashed var(--peach);background:transparent;border-radius:2px;transform:rotate(45deg)}
 .graph-transcript-node{border-inline-start:3px solid var(--purple) !important}
 .graph-panel[dir="rtl"] .graph-transcript-node{border-inline-start-color:var(--purple)}
+
+/* Wonder High audit: on compact/reflow layouts, the graph IS the text cards.
+   Reuse the same edge-backed transcript; no second rendering/inference path. */
+.graph-relation-card.relation-support{border-inline-start:3px solid var(--cyan)}
+.graph-relation-card.relation-conflict{border-inline-start:3px dashed var(--peach);background:#f7b8a610}
+.graph-transcript-withdrawn{border:2px dashed var(--peach) !important;background:#f7b8a60a !important}
+@media(max-width:700px){
+  .graph-canvas{display:none}
+  .graph-transcript{margin-top:0;padding-top:6px;border-top:0}
+  .graph-transcript ul{display:flex;flex-direction:column;gap:10px}
+  .graph-transcript li{width:100%;max-width:100%;min-width:0;padding:13px 15px;overflow-wrap:anywhere;line-height:1.65}
+  .graph-panel{overflow-wrap:anywhere}
+}
