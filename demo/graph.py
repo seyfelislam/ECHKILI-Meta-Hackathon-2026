@@ -24,6 +24,21 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
             "sourceId": identifier,
         })
 
+    # Validate conflicts first: contradicted sources cannot endorse active hypotheses.
+    conflicted_evidence_ids = set()
+    contradiction_edges = []
+    for conflict in contradictions:
+        sources = conflict["evidenceIds"]
+        if len(sources) != 2 or sources[0] == sources[1] or any(source not in evidence_ids for source in sources):
+            raise ValueError("unknown evidence on contradiction edge")
+        conflicted_evidence_ids.update(sources)
+        contradiction_edges.append({
+            "source": f"e:{sources[0]}",
+            "target": f"e:{sources[1]}",
+            "relation": "CONTRADICTS",
+            "evidenceIds": list(sources),
+        })
+
     hypothesis_ids = set()
     for hypothesis in hypotheses:
         identifier = hypothesis["id"]
@@ -37,6 +52,8 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
             raise ValueError("provisional hypothesis requires corroboration")
         if any(source not in evidence_ids for source in sources):
             raise ValueError("unknown evidence on hypothesis edge")
+        if conflicted_evidence_ids.intersection(sources):
+            continue
         target = f"h:{identifier}"
         nodes.append({
             "id": target,
@@ -47,16 +64,7 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
         for source in sources:
             edges.append({"source": f"e:{source}", "target": target, "relation": "SUPPORTS", "evidenceId": source})
 
-    for conflict in contradictions:
-        sources = conflict["evidenceIds"]
-        if len(sources) != 2 or sources[0] == sources[1] or any(source not in evidence_ids for source in sources):
-            raise ValueError("unknown evidence on contradiction edge")
-        edges.append({
-            "source": f"e:{sources[0]}",
-            "target": f"e:{sources[1]}",
-            "relation": "CONTRADICTS",
-            "evidenceIds": list(sources),
-        })
+    edges.extend(contradiction_edges)
 
     if contradictions:
         nodes.append({"id": "review", "kind": "review", "label": "Qualified human review required"})
