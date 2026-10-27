@@ -65,6 +65,44 @@ class GraphStateTests(unittest.TestCase):
         reversed_selection = analyze("cabin-climate-01", ["e4", "e3", "e2", "e1"])["graph"]
         self.assertEqual(reversed_selection, expected)
 
+    def test_same_graph_serializes_identically_when_hypotheses_and_supports_are_permuted(self):
+        evidence = [{"id": identifier, "title": identifier} for identifier in ("e1", "e2", "e3", "e4")]
+        hypotheses = [
+            {"id": "h-a", "label": "Fictional A", "supportingEvidenceIds": ["e1", "e2"]},
+            {"id": "h-b", "label": "Fictional B", "supportingEvidenceIds": ["e3", "e4"]},
+        ]
+        expected = build_graph(evidence, hypotheses, [])
+        permutations = [
+            {**h, "supportingEvidenceIds": list(reversed(h["supportingEvidenceIds"]))}
+            for h in reversed(hypotheses)
+        ]
+        actual = build_graph(list(reversed(evidence)), permutations, [])
+        self.assertEqual(actual, expected)
+
+    def test_unordered_contradiction_pairs_have_stable_graph_serialization(self):
+        evidence = [{"id": identifier} for identifier in ("e1", "e2", "e3", "e4", "e5", "e6")]
+        hypotheses = [{"id": "h-independent", "label": "Fictional",
+                       "supportingEvidenceIds": ["e5", "e6"]}]
+        pairs = [{"evidenceIds": ["e1", "e4"]}, {"evidenceIds": ["e2", "e3"]}]
+        expected = build_graph(evidence, hypotheses, pairs)
+        reversed_pairs = [{"evidenceIds": list(reversed(item["evidenceIds"]))} for item in reversed(pairs)]
+        actual = build_graph(evidence, hypotheses, reversed_pairs)
+        self.assertEqual(actual, expected)
+        self.assertEqual([n["status"] for n in actual["nodes"] if n["kind"] == "hypothesis"],
+                         ["review_required"])
+
+    def test_unsafe_graph_identifiers_are_rejected_at_input_boundary(self):
+        for invalid in ("e:ambiguous", "e\u202e1", "e\n1"):
+            with self.subTest(invalid=repr(invalid)):
+                with self.assertRaisesRegex(ValueError, "invalid.*id"):
+                    build_graph([{"id": invalid}], [], [])
+        for invalid in ("h:ambiguous", "h\u202e1", "h\n1"):
+            with self.subTest(invalid=repr(invalid)):
+                with self.assertRaisesRegex(ValueError, "invalid.*id"):
+                    build_graph([{"id": "e1"}, {"id": "e2"}],
+                                [{"id": invalid, "label": "Fictional",
+                                  "supportingEvidenceIds": ["e1", "e2"]}], [])
+
     def test_null_root_collections_fail_as_validation_errors(self):
         valid_evidence = [{"id": "e1"}, {"id": "e2"}]
         valid_hypotheses = [{"id": "h1", "label": "Fictional", "supportingEvidenceIds": ["e1", "e2"]}]
