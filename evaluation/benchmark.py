@@ -24,10 +24,11 @@ def evaluate() -> dict:
         selected = [item for item, on in zip(ids, mask) if on]
         result = analyze(CASE["id"], selected)
         conflict = {"e1", "e4"}.issubset(selected)
+        expected_hypothesis_status = "review_required" if conflict else "unverified"
         linked = all(
             hypothesis["supportingEvidenceIds"]
             and set(hypothesis["supportingEvidenceIds"]).issubset(selected)
-            and hypothesis["status"] == "unverified"
+            and hypothesis["status"] == expected_hypothesis_status
             for hypothesis in result["hypotheses"]
         )
         guard = (
