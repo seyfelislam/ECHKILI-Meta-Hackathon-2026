@@ -6,7 +6,7 @@
 - Synthetic-only abstract contract: four invented observations `e1`–`e4`, two rule-based provisional hypotheses, one fictional contradiction, evidence graphs, Arabic/mobile accessibility.
 - No private production code, real vehicle record, customer data, keys, or proprietary implementation was shared. Meta was asked for critical review and independently falsifiable tests, not real diagnoses.
 - Playground completion shown as **43.9 s · Input 828 · Output 4.7K · Reasoning 3.2K**.
-- Retained raw response as `evaluation/meta_wonder_formal_run8_raw_2026-10-27.txt`. Meta returned one extra closing `}` in test T18's `fixtureInput`, so the literal raw output is **not valid JSON**; a clearly marked normalized copy removes that single character and is not passed off as raw.
+- Retained raw response as `evaluation/meta_wonder_formal_run8_raw_2026-10-27.txt`. Meta returned one extra closing `}` in test T18's `fixtureInput`, so the literal raw output is **not valid JSON**; a clearly marked normalized copy removes that single character and escapes an embedded hostile bidi override (`U+202E`) for readable code review, without changing the parsed value. It is not passed off as raw.
 
 ## Human-reviewed findings and changes
 
