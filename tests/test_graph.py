@@ -27,6 +27,26 @@ class GraphStateTests(unittest.TestCase):
             (edge["source"], edge["target"], edge["relation"]) for edge in graph["edges"]
         })
 
+    def test_independent_hypothesis_requires_review_under_global_conflict(self):
+        result = analyze("cabin-climate-01", ["e1", "e2", "e3", "e4"])
+        self.assertEqual(result["graph"]["state"], "HUMAN_REVIEW")
+        self.assertEqual([(h["id"], h["status"]) for h in result["hypotheses"]], [
+            ("h-intermittent", "review_required"),
+        ])
+        self.assertEqual([
+            (n["id"], n["status"]) for n in result["graph"]["nodes"] if n["kind"] == "hypothesis"
+        ], [("h:h-intermittent", "review_required")])
+        self.assertEqual({(e["source"], e["target"]) for e in result["graph"]["edges"]
+                          if e["relation"] == "SUPPORTS"}, {
+            ("e:e2", "h:h-intermittent"), ("e:e3", "h:h-intermittent"),
+        })
+
+    def test_illustrative_uncertainty_is_explicitly_uncalibrated(self):
+        result = analyze("cabin-climate-01", ["e1", "e3"])
+        self.assertEqual(result["graph"]["state"], "ABSTAIN")
+        self.assertEqual(result["uncertainty"], 0.66)
+        self.assertIs(result.get("uncertaintyCalibrated"), False)
+
     def test_no_evidence_abstains_with_no_fabricated_nodes(self):
         graph = analyze("cabin-climate-01", [])["graph"]
         self.assertEqual(graph, {"state": "ABSTAIN", "nodes": [], "edges": []})
