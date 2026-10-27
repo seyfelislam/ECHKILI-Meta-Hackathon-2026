@@ -15,6 +15,7 @@ const nodes = {
   graphLinks: document.getElementById("graph-links"),
   graphState: document.getElementById("graph-state"),
   graphJump: document.getElementById("graph-jump"),
+  graphLocale: document.getElementById("graph-locale"),
 };
 const STORY = [
   {name: "Initial evidence", ids: ["e1", "e2"], aim: "First evidence-linked possibility"},
@@ -25,6 +26,23 @@ let storyIndex = -1;
 let scenario = null;
 let busy = false;
 let previousResult = null;
+let graphLocale = "en";
+let lastGraphArgs = null;
+const graphI18n = window.ECHKILI_GRAPH_I18N;
+
+function graphCopy(key, values = {}) {
+  return graphI18n.graphText(graphLocale, key, values);
+}
+
+function graphStateKey(state) {
+  return state === "HUMAN_REVIEW" ? "statusHumanReview" :
+    state === "PROVISIONAL" ? "statusProvisional" : "statusAbstain";
+}
+
+function setGraphLanguage(locale) {
+  graphLocale = graphI18n.applyGraphLocale(document, locale);
+  if (lastGraphArgs) drawGraph(lastGraphArgs.data, lastGraphArgs.earlier, lastGraphArgs.comparison);
+}
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -108,10 +126,12 @@ function svgElement(tag, attributes = {}, text = null) {
 function drawGraph(data, earlier, comparison) {
   const graph = data.graph;
   if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) {
+    lastGraphArgs = null;
     nodes.graphPanel.hidden = true;
     nodes.graphJump.hidden = true;
     return;
   }
+  lastGraphArgs = {data, earlier, comparison};
 
   const activeIds = new Set(data.hypotheses.map((item) => item.id));
   const withdrawnIds = Array.isArray(comparison?.withdrawnHypothesisIds)
@@ -136,11 +156,12 @@ function drawGraph(data, earlier, comparison) {
   const svg = svgElement("svg", {
     viewBox: `0 0 900 ${height}`,
     role: "img",
+    direction: "ltr",
     "aria-labelledby": "evidence-graph-svg-title evidence-graph-svg-desc",
   });
-  svg.append(svgElement("title", {id: "evidence-graph-svg-title"}, "Traceable fictional evidence graph"));
+  svg.append(svgElement("title", {id: "evidence-graph-svg-title"}, graphCopy("svgTitle")));
   svg.append(svgElement("desc", {id: "evidence-graph-svg-desc"},
-    `${evidence.length} observations; ${graph.edges.length} evidence connections; state ${graph.state}. The text transcript below gives each relationship.`));
+    graphCopy("svgDescription", {count: all.length, edges: graph.edges.length, state: graphCopy(graphStateKey(graph.state))})));
 
   const labels = new Map(all.map((item) => [item.id, item.label]));
   nodes.graphLinks.replaceChildren();
@@ -160,8 +181,8 @@ function drawGraph(data, earlier, comparison) {
     }));
     const ref = edge.evidenceId || (edge.evidenceIds || []).join(" + ");
     const sentence = conflict
-      ? `${ref}: two fictional reports contradict each other; human review required.`
-      : `${ref}: supports the provisional, unverified explanation “${labels.get(edge.target)}”.`;
+      ? graphCopy("edgeConflict", {ref})
+      : graphCopy("edgeSupports", {ref, label: labels.get(edge.target)});
     nodes.graphLinks.append(element("li", "", sentence));
   }
 
@@ -183,8 +204,8 @@ function drawGraph(data, earlier, comparison) {
       "stroke-dasharray": item.kind === "withdrawn" ? "6 5" : "none",
     }));
     const kicker = item.kind === "evidence" ? item.sourceId.toUpperCase() :
-      item.kind === "hypothesis" ? "UNVERIFIED HYPOTHESIS" :
-      item.kind === "withdrawn" ? "WITHDRAWN EXPLANATION" : "REVIEW REQUIRED";
+      item.kind === "hypothesis" ? graphCopy("legendHypothesis") :
+      item.kind === "withdrawn" ? graphCopy("legendConflict") : graphCopy("statusHumanReview");
     group.append(svgElement("text", {x: x - width / 2 + 14, y: y - 11, fill: palette[1],
       "font-size": 10, "font-weight": 750, "letter-spacing": .8}, kicker));
     const label = String(item.label || item.id);
@@ -194,10 +215,10 @@ function drawGraph(data, earlier, comparison) {
     svg.append(group);
   }
 
-  for (const ghost of ghosts) nodes.graphLinks.append(element("li", "", `${ghost.label}: withdrawn after the evidence set changed.`));
-  if (!graph.edges.length) nodes.graphLinks.append(element("li", "", "No supported relationships: the fictional example abstains."));
+  for (const ghost of ghosts) nodes.graphLinks.append(element("li", "", graphCopy("ghostWithdrawn", {label: ghost.label})));
+  if (!graph.edges.length) nodes.graphLinks.append(element("li", "", graphCopy("noEdges")));
   nodes.graphCanvas.replaceChildren(svg);
-  nodes.graphState.textContent = graph.state.replaceAll("_", " ");
+  nodes.graphState.textContent = graphCopy(graphStateKey(graph.state));
   nodes.graphState.className = `graph-state ${graph.state.toLowerCase()}`;
   nodes.graphPanel.hidden = false;
   nodes.graphJump.hidden = false;
@@ -332,6 +353,8 @@ async function init() {
 }
 
 nodes.storyButton.addEventListener("click", advanceStory);
+nodes.graphLocale.addEventListener("change", () => setGraphLanguage(nodes.graphLocale.value));
+setGraphLanguage(nodes.graphLocale.value);
 document.getElementById("preset-converging").addEventListener("click", () => selectPreset(["e1", "e2", "e3"]));
 document.getElementById("preset-conflict").addEventListener("click", () => selectPreset(["e1", "e4"]));
 nodes.analyze.addEventListener("click", runAnalysis);
