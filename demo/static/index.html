@@ -7,6 +7,7 @@
   <meta name="description" content="ECHKILI Evidence Lab — a synthetic, evidence-aware diagnostic reasoning experiment.">
   <title>ECHKILI | Evidence Lab</title>
   <link rel="stylesheet" href="/styles.css">
+  <script src="/graph-i18n.js" defer></script>
   <script src="/app.js" defer></script>
 </head>
 <body>
@@ -85,26 +86,34 @@
           </section>
         </div>
 
-        <section id="graph-panel" class="graph-panel" aria-labelledby="graph-title" hidden>
+        <section id="graph-panel" class="graph-panel" aria-labelledby="graph-title" lang="en" dir="ltr" hidden>
           <div class="graph-heading">
             <div>
               <span class="section-step">EXPERIMENT 002 · EXPLAINABLE GRAPH</span>
               <h3 id="graph-title">Follow the evidence.</h3>
-              <p>Every connection has a visible source. Contradictions never disappear behind a confident answer.</p>
+              <p id="graph-intro">Every connection has a visible source. Contradictions never disappear behind a confident answer.</p>
             </div>
-            <span id="graph-state" class="graph-state">AWAITING EVIDENCE</span>
+            <div class="graph-header-controls">
+              <label for="graph-locale">Language · Langue · اللغة</label>
+              <select id="graph-locale" aria-label="Graph language">
+                <option value="en" selected>English</option>
+                <option value="fr">Français</option>
+                <option value="ar">العربية</option>
+              </select>
+              <span id="graph-state" class="graph-state" role="status" aria-live="polite">AWAITING EVIDENCE</span>
+            </div>
           </div>
           <div class="graph-legend" aria-label="Graph key">
-            <span><i class="legend-dot evidence" aria-hidden="true"></i> Observation</span>
-            <span><i class="legend-dot hypothesis" aria-hidden="true"></i> Provisional explanation</span>
-            <span><i class="legend-dot conflict" aria-hidden="true"></i> Conflict / withdrawal</span>
+            <span><i class="legend-dot evidence" aria-hidden="true"></i><span id="graph-legend-observation">Observation</span></span>
+            <span><i class="legend-dot hypothesis" aria-hidden="true"></i><span id="graph-legend-hypothesis">Provisional explanation</span></span>
+            <span><i class="legend-dot conflict" aria-hidden="true"></i><span id="graph-legend-conflict">Conflict / withdrawal</span></span>
           </div>
-          <div id="graph-canvas" class="graph-canvas" aria-label="Visual evidence graph"></div>
+          <div id="graph-canvas" class="graph-canvas" dir="ltr" aria-labelledby="graph-title"></div>
           <div class="graph-transcript">
-            <h4>Readable evidence connections</h4>
+            <h4 id="graph-transcript-title">Readable evidence connections</h4>
             <ul id="graph-links"></ul>
           </div>
-          <p class="graph-disclaimer">Fictional illustration, not validated vehicle diagnosis. A connection is not proof of causation.</p>
+          <p id="graph-disclaimer" class="graph-disclaimer">Fictional illustration, not validated vehicle diagnosis. A connection is not proof of causation.</p>
         </section>
       </section>
 
