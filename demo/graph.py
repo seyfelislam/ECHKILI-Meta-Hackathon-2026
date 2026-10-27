@@ -7,7 +7,17 @@ It refuses dangling citations so the visualization cannot invent provenance.
 from __future__ import annotations
 
 
+def _display_label(label: object) -> str:
+    if not isinstance(label, str) or not label.strip():
+        raise ValueError("malformed graph label")
+    if any("\u202a" <= char <= "\u202e" or "\u2066" <= char <= "\u2069" for char in label):
+        raise ValueError("direction control in graph label")
+    return label
+
+
 def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradictions: list[dict]) -> dict:
+    if not all(isinstance(records, list) for records in (selected_evidence, hypotheses, contradictions)):
+        raise ValueError("malformed graph collections")
     evidence_ids = set()
     nodes = []
     edges = []
@@ -22,9 +32,12 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
         nodes.append({
             "id": f"e:{identifier}",
             "kind": "evidence",
-            "label": evidence.get("title") or identifier.upper(),
+            "label": _display_label(evidence.get("title") or identifier.upper()),
             "sourceId": identifier,
         })
+    # The same evidence set should yield the same graph regardless of the
+    # order in which a caller supplied its observations.
+    nodes.sort(key=lambda node: node["id"])
 
     # Validate conflicts first: contradicted sources cannot endorse active hypotheses.
     conflicted_evidence_ids = set()
@@ -59,6 +72,10 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
             raise ValueError("invalid hypothesis id")
         if identifier in hypothesis_ids:
             raise ValueError("duplicate hypothesis id")
+        label = hypothesis.get("label")
+        if not isinstance(label, str) or not label.strip():
+            raise ValueError("malformed hypothesis label")
+        label = _display_label(label)
         hypothesis_ids.add(identifier)
         sources = hypothesis.get("supportingEvidenceIds")
         if not isinstance(sources, list) or any(not isinstance(source, str) for source in sources):
@@ -75,7 +92,7 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
         nodes.append({
             "id": target,
             "kind": "hypothesis",
-            "label": hypothesis["label"],
+            "label": label,
             "status": "review_required" if contradictions else "unverified",
         })
         for source in sources:
