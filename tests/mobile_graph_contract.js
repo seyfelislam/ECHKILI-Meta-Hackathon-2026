@@ -20,6 +20,7 @@ class Node {
     this.className = "";
     this.hidden = false;
     this.firstChild = {textContent: ""};
+    this.style = {};
   }
   setAttribute(key, value) {this.attributes[key] = String(value);}
   append(...items) {this.children.push(...items);}
@@ -55,7 +56,7 @@ const graph = {
     {id: "e:e2", kind: "evidence", sourceId: "e2", label: "Record B"},
     {id: "e:e3", kind: "evidence", sourceId: "e3", label: "Record C"},
     {id: "e:e4", kind: "evidence", sourceId: "e4", label: "Record D"},
-    {id: "h:h2", kind: "hypothesis", label: "Explanation B"},
+    {id: "h:h2", kind: "hypothesis", label: "Explanation B", status: "review_required"},
   ],
   edges: [
     {source: "e:e2", target: "h:h2", relation: "SUPPORTS", evidenceId: "e2"},
@@ -85,6 +86,11 @@ assert(cards[0].textContent.includes("e2") && cards[0].textContent.includes("h2"
   "support card must expose the target h2 reference, not only a display label");
 assert(cards[2].textContent.includes("e1") && cards[2].textContent.includes("e4"),
   "conflict card must expose both endpoints");
+assert(cards[0].textContent.includes("Human review required"),
+  "a retained explanation in a conflicted case must not read as an actionable provisional result");
+assert(id("graph-links").children.some(item => item.className.includes("graph-transcript-node") &&
+  item.textContent.includes("Explanation B") && item.textContent.includes("Human review required")),
+"the text graph node must expose the independent hypothesis's review state");
 assert(!cards.some(card => Object.values(card.attributes).some(value => value.includes("h1"))),
   "a withdrawn hypothesis must never appear as an active relationship endpoint");
 const withdrawn = id("graph-links").children.filter(item => item.className.includes("graph-transcript-withdrawn"));
@@ -102,6 +108,8 @@ assert.deepEqual(cards.map(card => [card.attributes["data-source"],card.attribut
 ]);
 assert(cards[0].textContent.includes("\u2066e2\u2069"), "Arabic source ID must be isolated");
 assert(cards[0].textContent.includes("\u2066h2\u2069"), "Arabic target ID must be isolated");
+assert(cards[0].textContent.includes("تلزم مراجعة بشرية"),
+  "Arabic relationship card must name the review state, not rely on the banner alone");
 assert(cards[2].textContent.includes("\u2066e1 + e4\u2069"), "Arabic conflict pair must be isolated");
 
 // A truly empty graph must not create cards, connector placeholders or claims.
@@ -161,5 +169,37 @@ ctx.__input = {
 vm.runInContext("drawGraph(__input,null,null)",ctx);
 assert.equal(relationCards().length, 0, "mismatched conflict evidenceIds must be rejected");
 assert(id("graph-links").children.some(n => n.textContent === i18n.locales.ar.messages.noEdges));
+
+// A fictional caution signal is not a scientific probability or confidence
+// percentage, including when the interface narrates an evidence update.
+ctx.__input = {
+  graph: {state: "ABSTAIN", nodes: [], edges: []},
+  hypotheses: [], selectedEvidence: [{id: "e1"}], contradictions: [],
+  inference: {metaCalled: false}, uncertainty: 0.66,
+  recommendedAction: "CONTINUE_DIAGNOSIS", limitations: ["Fictional only."],
+};
+vm.runInContext("renderResult(__input)", ctx);
+const cautionBlock = id("results").children.find(part => part.className === "result-section" &&
+  part.children[0].textContent.includes("UNCERTAINTY"));
+assert(cautionBlock, "a visible uncertainty explanation must remain available");
+assert(cautionBlock.children[0].textContent.includes("NOT A PROBABILITY"),
+  "the caution score must deny probabilistic calibration next to its value");
+assert.equal(cautionBlock.children[1].textContent, "0.66 / 1.00",
+  "do not display the illustrative numerical score as 66% confidence");
+assert(!cautionBlock.children.some(part => part.className === "meter"),
+  "a progress meter would visually imply scientifically calibrated precision");
+
+ctx.__input = {
+  graph: {state: "HUMAN_REVIEW", nodes: [], edges: []},
+  hypotheses: [], selectedEvidence: [{id: "e1"}, {id: "e4"}],
+  contradictions: [{evidenceIds: ["e1", "e4"]}],
+  inference: {metaCalled: false}, uncertainty: 0.78,
+  recommendedAction: "TECHNICIAN_REVIEW", limitations: ["Fictional only."],
+};
+vm.runInContext("renderResult(__input)", ctx);
+const changeBlock = id("results").children.find(part => part.children[0].textContent.includes("EVIDENCE UPDATE"));
+assert(changeBlock, "a changed synthetic evidence selection needs an audit delta");
+assert(!changeBlock.children[1].children[1].textContent.includes("%"),
+  "the comparison must not re-introduce probability-like percentages");
 
 console.log("Mobile graph synthetic contract: relationships, withdrawal, RTL IDs and abstention verified");
