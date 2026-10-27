@@ -33,6 +33,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const i18n = require('./demo/static/graph-i18n.js');
 const resultI18n = require('./demo/static/result-i18n.js');
+const siteI18n = require('./demo/static/site-i18n.js');
 
 class El {
   constructor(tag='div') {
@@ -49,8 +50,8 @@ class El {
 }
 const map = new Map();
 const el = id => {if(!map.has(id))map.set(id,new El());return map.get(id)};
-const doc = {getElementById:el,createElement:tag=>new El(tag),createElementNS:(_ns,tag)=>new El(tag)};
-const context = {document:doc,window:{ECHKILI_GRAPH_I18N:i18n,ECHKILI_RESULT_I18N:resultI18n},fetch:()=>new Promise(()=>{}),console};
+const doc = {getElementById:el,createElement:tag=>new El(tag),createElementNS:(_ns,tag)=>new El(tag),querySelectorAll:()=>[]};
+const context = {document:doc,window:{ECHKILI_GRAPH_I18N:i18n,ECHKILI_RESULT_I18N:resultI18n,ECHKILI_SITE_I18N:siteI18n},fetch:()=>new Promise(()=>{}),console};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync('demo/static/app.js','utf8'),context);
 const input = {
