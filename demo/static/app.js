@@ -7,6 +7,9 @@ const nodes = {
   count: document.getElementById("selection-count"),
   analyze: document.getElementById("analyze-button"),
   results: document.getElementById("results"),
+  resultsTitle: document.getElementById("results-title"),
+  emptyTitle: document.getElementById("empty-state-title"),
+  emptyDescription: document.getElementById("empty-state-description"),
   mode: document.getElementById("result-mode"),
   storyButton: document.getElementById("story-button"),
   storyProgress: document.getElementById("story-progress"),
@@ -29,6 +32,7 @@ let previousResult = null;
 let graphLocale = "en";
 let lastGraphArgs = null;
 let lastResultArgs = null;
+let resultViewState = "waiting";
 const graphI18n = window.ECHKILI_GRAPH_I18N;
 const resultI18n = window.ECHKILI_RESULT_I18N;
 
@@ -73,10 +77,17 @@ function resultPhrase(key, values = {}) {
 
 function setGraphLanguage(locale) {
   graphLocale = graphI18n.applyGraphLocale(document, locale);
+  nodes.resultsTitle.textContent = resultI18n.resultShellText(graphLocale, "resultsTitle");
+  nodes.emptyTitle.textContent = resultI18n.resultShellText(graphLocale, "emptyTitle");
+  nodes.emptyDescription.textContent = resultI18n.resultShellText(graphLocale, "emptyBody");
+  nodes.graphJump.firstChild.textContent = `${resultI18n.resultShellText(graphLocale, "graphJump")} `;
+  if (resultViewState === "waiting") nodes.mode.textContent = resultI18n.resultShellText(graphLocale, "waiting");
   nodes.results.lang = graphLocale;
   nodes.results.dir = graphLocale === "ar" ? "rtl" : "ltr";
   if (!busy) nodes.analyze.querySelector("span").textContent = resultCopy("analyzeButton");
-  if (lastResultArgs) renderResult(lastResultArgs.data, lastResultArgs.comparison, true);
+  if (resultViewState === "analyzed" && lastResultArgs) {
+    renderResult(lastResultArgs.data, lastResultArgs.comparison, true);
+  }
   else if (lastGraphArgs) drawGraph(lastGraphArgs.data, lastGraphArgs.earlier, lastGraphArgs.comparison);
 }
 
@@ -355,6 +366,7 @@ function renderResult(data, comparison = null, retranslate = false) {
   if (!retranslate) {
     lastResultArgs = {data, comparison, earlier};
     previousResult = data;
+    resultViewState = "analyzed";
   }
   drawGraph(data, earlier, comparison);
   nodes.mode.textContent = resultCopy(data.inference.metaAccepted ? "modeRemoteAccepted" :
@@ -423,6 +435,7 @@ async function runAnalysis() {
   } catch (error) {
     nodes.results.replaceChildren(finding(resultCopy("analysisErrorTitle"), error.message, []));
     nodes.mode.textContent = "ERROR";
+    resultViewState = "error";
   } finally {
     busy = false;
     nodes.analyze.querySelector("span").textContent = resultCopy("analyzeButton");
