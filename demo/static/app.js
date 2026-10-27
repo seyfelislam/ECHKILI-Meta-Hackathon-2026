@@ -312,7 +312,8 @@ function renderResult(data, comparison = null) {
   }
   previousResult = data;
   drawGraph(data, earlier, comparison);
-  nodes.mode.textContent = data.inference.metaCalled ? "META ASSIST · PROVISIONAL" : "TRANSPARENT OFFLINE RULES";
+  nodes.mode.textContent = data.inference.metaAccepted ? "OFFLINE + UNVERIFIED META NOTES" :
+    data.inference.metaCalled ? "OFFLINE · META RESPONSE NOT USED" : "TRANSPARENT OFFLINE RULES";
   const number = element("div", "uncertainty-number", `${data.uncertainty.toFixed(2)} / 1.00`);
   nodes.results.append(block("ESTIMATED UNCERTAINTY · NOT A PROBABILITY", [number,
     element("p", "result-desc", "Uncalibrated fictional caution score for this teaching example; not a statistical estimate, confidence percentage, or decision threshold."),
@@ -322,6 +323,25 @@ function renderResult(data, comparison = null) {
     hypothesis.label, `${hypothesis.verificationGoal} · ${hypothesis.provenance} · Unverified.`, hypothesis.supportingEvidenceIds
   )) : [finding("Not enough consistent evidence", "The example abstains from producing a specific hypothesis. Select more observations or request human review.", [])];
   nodes.results.append(block("PROVISIONAL HYPOTHESES", findings));
+
+  // Optional model text is not a hypothesis, graph node, evidence edge or
+  // second opinion. Keep it physically and semantically separate from both.
+  const remoteNotes = Array.isArray(data.metaAnnotations) && data.inference.metaAccepted
+    ? data.metaAnnotations : [];
+  if (remoteNotes.length) {
+    const children = [element("p", "result-desc",
+      "Unverified remote model suggestions for this fictional example only. " +
+      "Citations are pointers to selected records, not independent corroboration or diagnoses.")];
+    for (const note of remoteNotes) {
+      const card = element("div", "finding");
+      card.append(element("h4", "", note.label),
+        element("p", "", "Remote annotation · unverified · not part of the evidence graph."),
+        element("div", "evidence-refs",
+          `CITED SELECTED IDS (NOT VERIFIED): ${note.citations.join(" · ")}`));
+      children.push(card);
+    }
+    nodes.results.append(block("REMOTE MODEL NOTES · UNVERIFIED", children));
+  }
 
   if (data.contradictions.length) {
     nodes.results.append(block("CONTRADICTIONS DETECTED", data.contradictions.map((conflict) => finding(
