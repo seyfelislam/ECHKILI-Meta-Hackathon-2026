@@ -31,7 +31,11 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
     contradiction_pairs = set()
     contradiction_edges = []
     for conflict in contradictions:
-        sources = conflict["evidenceIds"]
+        if not isinstance(conflict, dict):
+            raise ValueError("malformed contradiction")
+        sources = conflict.get("evidenceIds")
+        if not isinstance(sources, list) or any(not isinstance(source, str) for source in sources):
+            raise ValueError("malformed contradiction")
         if len(sources) != 2 or sources[0] == sources[1] or any(source not in evidence_ids for source in sources):
             raise ValueError("unknown evidence on contradiction edge")
         pair = frozenset(sources)
@@ -48,13 +52,17 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
 
     hypothesis_ids = set()
     for hypothesis in hypotheses:
-        identifier = hypothesis["id"]
+        if not isinstance(hypothesis, dict):
+            raise ValueError("malformed hypothesis")
+        identifier = hypothesis.get("id")
         if not isinstance(identifier, str) or not identifier:
             raise ValueError("invalid hypothesis id")
         if identifier in hypothesis_ids:
             raise ValueError("duplicate hypothesis id")
         hypothesis_ids.add(identifier)
-        sources = hypothesis["supportingEvidenceIds"]
+        sources = hypothesis.get("supportingEvidenceIds")
+        if not isinstance(sources, list) or any(not isinstance(source, str) for source in sources):
+            raise ValueError("malformed hypothesis")
         if len(sources) != len(set(sources)):
             raise ValueError("duplicate support is not independent evidence")
         if len(sources) < 2:
