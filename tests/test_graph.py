@@ -115,6 +115,35 @@ class GraphStateTests(unittest.TestCase):
             self.fail(f"Unvalidated input leaked {type(exc).__name__} instead of ValueError")
         self.fail("Scalar evidence input was accepted")
 
+    def test_malformed_scalar_contradiction_is_a_validation_error(self):
+        with self.assertRaisesRegex(ValueError, "malformed contradiction"):
+            build_graph(
+                selected_evidence=[{"id": "e1"}, {"id": "e2"}],
+                hypotheses=[], contradictions=[123],
+            )
+
+    def test_null_contradiction_references_are_a_validation_error(self):
+        with self.assertRaisesRegex(ValueError, "malformed contradiction"):
+            build_graph(
+                selected_evidence=[{"id": "e1"}, {"id": "e2"}],
+                hypotheses=[], contradictions=[{"evidenceIds": None}],
+            )
+
+    def test_scalar_hypothesis_is_a_validation_error(self):
+        with self.assertRaisesRegex(ValueError, "malformed hypothesis"):
+            build_graph(
+                selected_evidence=[{"id": "e1"}, {"id": "e2"}],
+                hypotheses=[123], contradictions=[],
+            )
+
+    def test_null_hypothesis_sources_are_a_validation_error(self):
+        with self.assertRaisesRegex(ValueError, "malformed hypothesis"):
+            build_graph(
+                selected_evidence=[{"id": "e1"}, {"id": "e2"}],
+                hypotheses=[{"id": "h1", "supportingEvidenceIds": None}],
+                contradictions=[],
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
