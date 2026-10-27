@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/styles.css">
   <script src="/graph-i18n.js" defer></script>
   <script src="/result-i18n.js" defer></script>
+  <script src="/site-i18n.js" defer></script>
   <script src="/app.js" defer></script>
 </head>
 <body>
@@ -24,26 +25,26 @@
 
     <main>
       <section class="hero" aria-labelledby="hero-title">
-        <div class="eyebrow"><span class="eyebrow-line" aria-hidden="true"></span> META GLOBAL AI DEVELOPER HACKATHON 2026</div>
-        <h1 id="hero-title">When evidence disagrees,<br><em>clarity matters.</em></h1>
-        <p class="lead">Explore a fictional system through traceable observations, provisional explanations, and explicit uncertainty. No black-box certainty. No unsafe repair advice.</p>
+        <div class="eyebrow"><span class="eyebrow-line" aria-hidden="true"></span> <span data-site-key="heroEyebrow">META GLOBAL AI DEVELOPER HACKATHON 2026</span></div>
+        <h1 id="hero-title"><span data-site-key="heroLine1">When evidence disagrees,</span><br><em data-site-key="heroLine2">clarity matters.</em></h1>
+        <p class="lead" data-site-key="heroLead">Explore a fictional system through traceable observations, provisional explanations, and explicit uncertainty. No black-box certainty. No unsafe repair advice.</p>
         <div class="hero-chips" aria-label="Prototype properties">
-          <span>01 / Source-aware</span>
-          <span>02 / Contradiction-sensitive</span>
-          <span>03 / Human-reviewed</span>
+          <span>01 / <span data-site-key="chipSource">Source-aware</span></span>
+          <span>02 / <span data-site-key="chipConflict">Contradiction-sensitive</span></span>
+          <span>03 / <span data-site-key="chipHuman">Human-reviewed</span></span>
         </div>
       </section>
 
       <section class="workspace" aria-label="Evidence analysis workspace">
         <div class="workspace-topline">
-          <div><span class="section-step">EXPERIMENT 001</span><h2>Explore the case</h2></div>
-          <span class="fiction-badge">100% SYNTHETIC DATA</span>
+          <div><span class="section-step">EXPERIMENT 001</span><h2 data-site-key="workspaceTitle">Explore the case</h2></div>
+          <span class="fiction-badge" data-site-key="syntheticBadge">100% SYNTHETIC DATA</span>
         </div>
 
         <div class="story-strip" aria-label="Guided evidence journey">
           <div class="story-copy">
-            <span class="story-eyebrow">JUDGE DEMO · 3 STEPS · LOCAL ONLY</span>
-            <strong>Watch the reasoning change when new evidence arrives.</strong>
+            <span class="story-eyebrow" data-site-key="storyEyebrow">JUDGE DEMO · 3 STEPS · LOCAL ONLY</span>
+            <strong data-site-key="storyTitle">Watch the reasoning change when new evidence arrives.</strong>
             <span id="story-progress" class="story-progress" role="status" aria-live="polite">Ready: supporting evidence → corroboration → contradiction &amp; human review</span>
           </div>
           <button type="button" class="story-button" id="story-button" disabled>Start guided demonstration <span aria-hidden="true">→</span></button>
@@ -52,17 +53,17 @@
           <section class="panel evidence-panel" aria-labelledby="evidence-title">
             <div class="panel-inner">
               <div class="panel-heading"><span class="panel-icon" aria-hidden="true">◎</span><span>STEP 01</span></div>
-              <h3 id="evidence-title">Choose observations</h3>
-              <p class="panel-intro">Toggle any evidence cards to see what a transparent analysis can — and cannot — conclude.</p>
+              <h3 id="evidence-title" data-site-key="evidenceTitle">Choose observations</h3>
+              <p class="panel-intro" data-site-key="evidenceIntro">Toggle any evidence cards to see what a transparent analysis can — and cannot — conclude.</p>
               <div class="case-box">
-                <span class="tiny-label">SCENARIO / FICTIONAL</span>
+                <span class="tiny-label" data-site-key="scenarioLabel">SCENARIO / FICTIONAL</span>
                 <h4 id="case-title">Loading scenario…</h4>
                 <p id="case-desc">Preparing test evidence.</p>
               </div>
-              <fieldset id="evidence-list" class="evidence-list" aria-label="Available evidence"><legend class="tiny-label">AVAILABLE OBSERVATIONS</legend></fieldset>
+              <fieldset id="evidence-list" class="evidence-list" aria-label="Available evidence"><legend class="tiny-label" data-site-key="observationLegend">AVAILABLE OBSERVATIONS</legend></fieldset>
               <div class="presets" aria-label="Example selections">
-                <button type="button" class="subtle-button" id="preset-converging">Try supporting evidence</button>
-                <button type="button" class="subtle-button" id="preset-conflict">Try a contradiction</button>
+                <button type="button" class="subtle-button" id="preset-converging" data-site-key="presetSupport">Try supporting evidence</button>
+                <button type="button" class="subtle-button" id="preset-conflict" data-site-key="presetConflict">Try a contradiction</button>
               </div>
               <button type="button" class="primary-button" id="analyze-button" disabled>
                 <span>Analyze selected evidence</span><span aria-hidden="true">↗</span>
@@ -78,7 +79,7 @@
                 <h3 id="results-title">Reasoning trace</h3>
                 <span id="result-mode" class="mode-pill">WAITING FOR INPUT</span>
               </div>
-              <p class="panel-intro">Every proposed explanation links back to specific selected evidence. Uncertainty remains visible.</p>
+              <p class="panel-intro" data-site-key="resultsIntro">Every proposed explanation links back to specific selected evidence. Uncertainty remains visible.</p>
               <a id="graph-jump" class="graph-jump" href="#graph-panel" hidden>View live evidence graph <span aria-hidden="true">↓</span></a>
               <div id="results" class="results" aria-live="polite" aria-atomic="false">
                 <div class="empty-state" id="empty-state"><span class="empty-graphic" aria-hidden="true">◇</span><h4 id="empty-state-title">Your evidence, your insight.</h4><p id="empty-state-description">Select observations and run the analysis to see a transparent reasoning trace.</p></div>
@@ -120,7 +121,7 @@
 
       <section class="below" aria-label="Project principles">
         <div class="below-lead"><span class="section-step">BUILT WITH INTENT</span><h2>Trust begins with<br>what a system <em>admits.</em></h2></div>
-        <div class="principles"><article><span class="principle-number">01</span><h3>Show the source</h3><p>Trace every explanation to the observation that supports it.</p></article><article><span class="principle-number">02</span><h3>Surface the conflict</h3><p>Contradictory records increase caution instead of disappearing.</p></article><article><span class="principle-number">03</span><h3>Keep humans in control</h3><p>Any real-world interpretation requires qualified independent review.</p></article></div>
+        <div class="principles"><article><span class="principle-number">01</span><h3 data-site-key="principle1Title">Show the source</h3><p data-site-key="principle1Body">Trace every explanation to the observation that supports it.</p></article><article><span class="principle-number">02</span><h3 data-site-key="principle2Title">Surface the conflict</h3><p data-site-key="principle2Body">Contradictory records increase caution instead of disappearing.</p></article><article><span class="principle-number">03</span><h3 data-site-key="principle3Title">Keep humans in control</h3><p data-site-key="principle3Body">Any real-world interpretation requires qualified independent review.</p></article></div>
       </section>
     </main>
 
