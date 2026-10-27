@@ -76,7 +76,7 @@ def build_graph(selected_evidence: list[dict], hypotheses: list[dict], contradic
             "id": target,
             "kind": "hypothesis",
             "label": hypothesis["label"],
-            "status": "unverified",
+            "status": "review_required" if contradictions else "unverified",
         })
         for source in sources:
             edges.append({"source": f"e:{source}", "target": target, "relation": "SUPPORTS", "evidenceId": source})
