@@ -11,7 +11,7 @@ An **offline-first, intentionally limited fictional vehicle-cabin diagnostics de
 - Explicit contradiction detection and cautious human review.
 - A server-audited **before/after evidence trace** that explicitly names new evidence, newly surfaced conflicts, and withdrawn hypotheses.
 - A **three-step judge demo** (initial observations → corroboration → conflicting report and human review), with no Meta requests.
-- A source-cited evidence graph with an English / French / Arabic language switch (RTL copy, LTR technical IDs).
+- A visual, source-cited **evidence graph** with a language switch for **English, French, and Arabic**; Arabic copy uses RTL while technical IDs stay LTR.
 - An always-visible uncertainty indicator (illustrative, **not** calibrated).
 - A separate, optional Meta Model API enrichment path that is **disabled by default**.
 
@@ -33,7 +33,7 @@ Try:
 2. Observe a tentative `h-flow` hypothesis; later add a new report that conflicts with `e1`. The previously surfaced `h-flow` explanation is **withdrawn**, uncertainty rises, and the system requires qualified review.
 3. To explore manually, use **Try supporting evidence** or **Try a contradiction**, then click **Analyze selected evidence**.
 4. Deselect everything to see the demo decline to infer a diagnosis.
-5. In the graph panel, switch **Language · Langue · اللغة** to inspect the same fictional links without another model call.
+5. After an analysis, scroll to the evidence graph and switch **Language · Langue · اللغة** to review the same fictional relations in three languages without another model call.
 
 The guided comparison calls `/api/trace` and **never sends a Meta API request**. Manual `/api/analyze` also stays offline unless the explicit server-only opt-ins are enabled.
 
@@ -46,7 +46,9 @@ python -m evaluation.benchmark
 
 The benchmark exhausts all 16 subsets of the **four fictional** observations plus all **32 directed one-evidence additions**, checking provenance, conflict escalation, abstention, and stable human-review safeguards. These are software-contract checks; they do **not** measure diagnostic accuracy, model quality, or business impact. See [judging scorecard](docs/JUDGING_SCORECARD.md).
 
-The graph panel (not the entire page) has a reviewed language pack informed by a separate approved Muse Spark 1.3 synthetic experiment; see [experiment review](docs/META_SPARK_GRAPH_I18N_2026-10-27.md).
+The additional [six-case synthetic graph pack](evaluation/meta_graph_fixtures.json) was generated during a **separate, manually authorized Meta Playground experiment** on 27 October 2026 and checked with nine offline tests. Its graph references and cautious presentation states are validated by [`evaluation/graph_fixtures.py`](evaluation/graph_fixtures.py); none of its observations should be mistaken for real measurements. See the [experiment log](docs/META_GRAPH_LIVE_TEST_2026-10-27.md).
+
+The graph-panel language pack was adapted from a separate **Muse Spark 1.3** synthetic-copy experiment. The translated strings were manually reviewed and exercise four offline i18n tests plus an HTTP asset test. Only the graph panel is localized; the entire prototype is **not** yet multilingual. See [Spark review](docs/META_SPARK_GRAPH_I18N_2026-10-27.md).
 
 No model calls are made during tests. Integration tests only use a local loopback HTTP server.
 
@@ -64,7 +66,7 @@ META_MODEL_API_KEY=<valid key; server-side only>
 
 **Do not enable the adapter until** the correct API account, official endpoint/model availability, promo credits, billing guard, and any event-specific processing terms have been checked. The per-process call count is *not an account-wide spending limit*. There is no command in this repository that enables it automatically. No real data is accepted by the UI.
 
-Untrusted model text is accepted only as a small number of provisional labels referencing known evidence IDs. Model output cannot lower uncertainty, change the human-review decision, or recommend physical procedures.
+Untrusted model text is parsed as at most two **unverified remote notes** in a separate `metaAnnotations` result field. These notes must cite at least two distinct selected fictional IDs, but a citation is **not** verification. They are never canonical `hypotheses`, never graph nodes or edges, and cannot alter the human-review decision or the uncalibrated caution score. The client shows a separate, plainly labeled section only when a note was accepted. The API separately reports whether a request was attempted, a response completed, and a note was accepted. See the [ninth Meta adapter audit](docs/META_WONDER_ADAPTER_AUDIT_2026-10-27.md).
 
 ## Technical boundary
 
@@ -89,4 +91,4 @@ Commercial product and intellectual property remain with their respective rights
 
 ## Ten-day delivery and validation
 
-See [the day-by-day sprint plan](docs/TEN_DAY_SPRINT.md), [Meta integration gates](docs/META_INTEGRATION.md), and the [build log](docs/BUILD_LOG.md). The public repository contains runnable demonstration code. It does not assert that a real Meta API call has happened or that a grant is activated.
+See [the day-by-day sprint plan](docs/TEN_DAY_SPRINT.md), [Meta integration gates](docs/META_INTEGRATION.md), and the [build log](docs/BUILD_LOG.md). The public repository contains runnable offline demonstration code. The separately documented manual Playground experiment is **not** a live call made by this demo, proof of production integration, or evidence of diagnostic accuracy.
