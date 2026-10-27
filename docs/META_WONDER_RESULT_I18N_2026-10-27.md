@@ -12,7 +12,7 @@ Date: 27 October 2026. Scope: English, French and Modern Standard Arabic copy fo
 
 ## Design decisions and manual review
 
-Chosen approach: a dedicated `result-i18n.js` module containing exactly 30 common copy keys per locale, separate from the existing `graph-i18n.js`, with the **same visible language selector** controlling both components. The existing offline inference, graph source IDs and safety state remain unmodified.
+Chosen approach: a dedicated `result-i18n.js` module containing exactly 30 Meta-proposed common copy keys per locale, plus five separately identified human-written first-load/waiting strings, separate from the existing `graph-i18n.js`, with the **same visible language selector** controlling both components. The existing offline inference, graph source IDs and safety state remain unmodified.
 
 Two model strings were corrected before integration:
 
@@ -23,9 +23,9 @@ Other careful copy adjustments avoid implying that an API timeout necessarily me
 
 ## Implemented surface
 
-- The results-panel copy, uncalibrated caution explanation, active/withdrawn change counters, contradictory-record heading, global human-review banner, remote-note headings, and analyze button reflect the chosen French/Arabic language. Canonical observations and graph edges are unchanged.
+- The results-panel copy, empty/waiting presentation, uncalibrated caution explanation, active/withdrawn change counters, contradictory-record heading, global human-review banner, remote-note headings, graph jump link and analyze button reflect the chosen French/Arabic language. Canonical observations and graph edges are unchanged.
 - Arabic results use `dir=rtl` and `lang=ar`; each mixed-script ID and numeric placeholder in the evidence-update summary is emitted as a **separate `<bdi dir="ltr">` node**. These values are inserted as text nodes, not HTML, and remain in the original array order.
-- A locale change re-renders the last analysis with its original prior-evidence comparison, **without issuing another analysis API request** and without inventing graph relationships. An optional remote note still lives only in `metaAnnotations` and never in the `hypotheses` array.
+- A locale change re-renders the last **successful** analysis with its original prior-evidence comparison, **without issuing another analysis API request** and without inventing graph relationships. If the most recent request failed, changing language preserves the visible failure rather than resurrecting stale prior results. An optional remote note still lives only in `metaAnnotations` and never in the `hypotheses` array.
 - The English text/labels for the two fictional hypothesis names, their verification goals, conflict-detail source prose, scenario and broader page are not localized yet. This limitation is explicit so the user cannot mistake the work for a fully Arabic/French product.
 
 ## Offline verification and release gates
