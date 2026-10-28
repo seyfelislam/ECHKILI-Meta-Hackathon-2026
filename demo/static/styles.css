@@ -11,3 +11,53 @@
 .story-button{background:#a992ff;color:#0b1021;border:0;border-radius:10px;padding:12px 15px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:12px}
 .story-button:not(:disabled):hover{background:#c9baff}
 @media(max-width:560px){.story-strip{padding:18px}.story-button{width:100%;justify-content:space-between}}
+
+/* Evidence graph: a separate inspectable view, never a diagnostic assertion. */
+.graph-jump{display:inline-flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #56dccf55;background:#56dccf0d;color:#a4f2e7;text-decoration:none;font-size:12px;font-weight:750;border-radius:9px;padding:10px 12px;margin:-8px 0 22px}
+.graph-jump[hidden],.graph-panel[hidden]{display:none}
+.graph-jump:hover{background:#56dccf1c}
+.graph-panel{margin-top:18px;border:1px solid #4d5b7a;border-radius:22px;background:linear-gradient(148deg,#182442,#101c2e 65%,#181b31);padding:30px 32px;box-shadow:0 18px 65px #00000029}
+.graph-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:22px;flex-wrap:wrap}
+.graph-heading h3{font-size:32px;letter-spacing:-.045em;line-height:1.15;margin:8px 0 10px}
+.graph-heading p{color:#afc0da;font-size:13px;line-height:1.65;max-width:670px;margin-bottom:10px}
+.graph-state{font-size:10px;color:#c2d9e3;border:1px solid #678197;background:#162d3c;border-radius:100px;font-weight:800;letter-spacing:.1em;padding:9px 14px;white-space:nowrap}
+.graph-state.human_review{color:#ffd2bb;background:#50342d;border-color:#faad83}.graph-state.abstain{color:#dad1ff;background:#322750;border-color:#8c76e5}
+.graph-legend{display:flex;gap:19px;flex-wrap:wrap;margin:18px 0 14px;color:#b6c6df;font-size:11px}
+.graph-legend span{display:inline-flex;align-items:center;gap:7px}.legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#a992ff}.legend-dot.hypothesis{background:#56dccf}.legend-dot.conflict{background:#f7b8a6}
+.graph-canvas{overflow-x:auto;border-radius:13px;border:1px solid #354566;background:radial-gradient(ellipse at 75% 25%,#1a454b30,transparent 64%),#0d172b;scrollbar-color:#556789 #14223b}
+.graph-canvas svg{width:100%;min-width:760px;height:auto;display:block;overflow:visible}
+.graph-transcript{margin-top:18px;border-top:1px solid #ffffff1b;padding-top:18px}
+.graph-transcript h4{font-size:13px;letter-spacing:.02em;margin-bottom:10px}
+.graph-transcript ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.graph-transcript li{color:#bbcee3;background:#ffffff07;border:1px solid #ffffff13;border-radius:8px;font-size:12px;line-height:1.5;padding:9px 11px}
+.graph-disclaimer{font-size:11px;color:#8799b8;margin:20px 0 0}
+@media(max-width:700px){.graph-panel{padding:21px 15px}.graph-heading h3{font-size:26px}.graph-transcript ul{grid-template-columns:1fr}.graph-legend{gap:11px}}
+
+/* Spark-reviewed graph language switch; only the explanatory panel changes direction. */
+.graph-header-controls{display:flex;flex-direction:column;align-items:flex-end;gap:8px;min-width:158px}
+.graph-header-controls label{color:#b6c6df;font-size:11px;font-weight:650}
+.graph-header-controls select{background:#142d3d;color:#f2f5ff;border:1px solid #678197;border-radius:9px;padding:8px 12px;font:inherit;font-size:13px;min-width:158px}
+.graph-header-controls select:focus-visible{outline:3px solid #56dccf;outline-offset:3px}
+.graph-panel[dir="rtl"] .graph-header-controls{align-items:flex-start}
+.graph-panel[dir="rtl"] .graph-transcript{text-align:right}
+.graph-panel[dir="rtl"] .graph-canvas{direction:ltr}
+@media(max-width:700px){.graph-header-controls{width:100%;align-items:flex-start}.graph-header-controls select{max-width:100%}.graph-state{white-space:normal}}
+
+/* Spark vision audit: non-color conflict cues and keyboard access to panning. */
+.graph-canvas:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+.legend-dot.conflict{width:11px;height:11px;border:2px dashed var(--peach);background:transparent;border-radius:2px;transform:rotate(45deg)}
+.graph-transcript-node{border-inline-start:3px solid var(--purple) !important}
+.graph-panel[dir="rtl"] .graph-transcript-node{border-inline-start-color:var(--purple)}
+
+/* Wonder High audit: on compact/reflow layouts, the graph IS the text cards.
+   Reuse the same edge-backed transcript; no second rendering/inference path. */
+.graph-relation-card.relation-support{border-inline-start:3px solid var(--cyan)}
+.graph-relation-card.relation-conflict{border-inline-start:3px dashed var(--peach);background:#f7b8a610}
+.graph-transcript-withdrawn{border:2px dashed var(--peach) !important;background:#f7b8a60a !important}
+@media(max-width:700px){
+  .graph-canvas{display:none}
+  .graph-transcript{margin-top:0;padding-top:6px;border-top:0}
+  .graph-transcript ul{display:flex;flex-direction:column;gap:10px}
+  .graph-transcript li{width:100%;max-width:100%;min-width:0;padding:13px 15px;overflow-wrap:anywhere;line-height:1.65}
+  .graph-panel{overflow-wrap:anywhere}
+}

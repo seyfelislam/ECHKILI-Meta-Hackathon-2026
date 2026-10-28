@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .cases import CASE
+from .graph import build_graph
 
 
 def _hypothesis(identifier: str, label: str, supports: list[str], goal: str) -> dict:
@@ -50,6 +51,12 @@ def analyze(case_id: str, evidence_ids: list[str]) -> dict:
             "Review fictional time-stamped comfort logs for consistency; no physical intervention is requested.",
         ))
 
+    # An unaffected teaching hypothesis may remain visible during a separate
+    # conflict, but the global HUMAN_REVIEW state must govern its status too.
+    if contradictions:
+        for hypothesis in hypotheses:
+            hypothesis["status"] = "review_required"
+
     uncertainty = 0.95 if not active else round(max(0.5, 0.9 - 0.12 * len(active)), 2)
     if contradictions:
         uncertainty = max(0.78, uncertainty)
@@ -59,10 +66,14 @@ def analyze(case_id: str, evidence_ids: list[str]) -> dict:
         "synthetic": True,
         "selectedEvidence": [dict(fixture[identifier]) for identifier in evidence_ids],
         "hypotheses": hypotheses,
+        "metaAnnotations": [],
         "contradictions": contradictions,
+        "graph": build_graph([dict(fixture[identifier]) for identifier in evidence_ids], hypotheses, contradictions),
         "uncertainty": uncertainty,
+        "uncertaintyCalibrated": False,
         "recommendedAction": "TECHNICIAN_REVIEW" if contradictions else "CONTINUE_DIAGNOSIS",
-        "inference": {"mode": "deterministic-offline-demo", "metaCalled": False, "model": None},
+        "inference": {"mode": "deterministic-offline-demo", "metaCalled": False,
+                      "metaCompleted": False, "metaAccepted": False, "model": None},
         "limitations": [
             "This is invented data and illustrative logic, not a validated diagnosis.",
             "No repair instructions, safety clearance, or real-world decisions are provided.",

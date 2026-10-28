@@ -10,7 +10,13 @@ from demo.meta_provider import enrich
 
 def _response():
     return {"choices": [{"finish_reason": "stop", "message": {"content": json.dumps({
-        "hypotheses": [{"label": "Provisional thermal interaction", "supportingEvidenceIds": ["e1", "e2"]}]
+        "annotations": [{"label": "Provisional thermal interaction", "citations": ["e1", "e2"]}]
+    })}}]}
+
+
+def _mock_annotations(items, *, finish="stop"):
+    return {"choices": [{"finish_reason": finish, "message": {"content": json.dumps({
+        "annotations": items,
     })}}]}
 
 
@@ -37,24 +43,68 @@ class MetaProviderTests(unittest.TestCase):
                     self.assertEqual(result["inference"]["mode"], "deterministic-offline-demo")
                     send.assert_not_called()
 
-    def test_valid_mock_adds_provisional_reference_without_safety_override(self):
+    def test_valid_remote_note_is_not_a_canonical_hypothesis_or_graph_edge(self):
         with patch.dict(os.environ, self.flags), patch("demo.meta_provider._request_json", return_value=_response()) as send:
             result = enrich(self.case, copy.deepcopy(self.base))
         self.assertTrue(result["inference"]["metaCalled"])
+        self.assertTrue(result["inference"]["metaCompleted"])
+        self.assertTrue(result["inference"]["metaAccepted"])
         self.assertEqual(result["recommendedAction"], self.base["recommendedAction"])
         self.assertEqual(result["uncertainty"], self.base["uncertainty"])
+        self.assertEqual(result["hypotheses"], self.base["hypotheses"])
+        self.assertEqual(result["graph"], self.base["graph"])
+        self.assertEqual(result["inference"]["mode"], "deterministic-offline-demo")
         self.assertEqual(result["inference"]["model"], "muse-spark-1.3")
-        self.assertEqual(result["hypotheses"][-1]["provenance"], "meta-standard-provisional")
+        self.assertEqual(len(result["metaAnnotations"]), 1)
+        self.assertEqual(result["metaAnnotations"][0]["citations"], ["e1", "e2"])
+        self.assertEqual(result["metaAnnotations"][0]["provenance"], "remote-unverified")
+        self.assertFalse(result["metaAnnotations"][0]["verified"])
         payload = send.call_args.args[0]
         self.assertEqual(payload["model"], "muse-spark-1.3")
         self.assertFalse(payload["store"])
         self.assertLessEqual(payload["max_completion_tokens"], 256)
         self.assertNotIn("customer", json.dumps(payload).lower())
 
+    def test_untrusted_single_or_repeated_citation_is_never_accepted(self):
+        for citations in (["e1"], ["e1", "e1"]):
+            with self.subTest(citations=citations), patch.dict(os.environ, self.flags), patch("demo.meta_provider._calls_made", 0), patch(
+                "demo.meta_provider._request_json", return_value=_mock_annotations([
+                    {"label": "Only a single fictional source", "citations": citations},
+                ])
+            ):
+                result = enrich(self.case, copy.deepcopy(self.base))
+            self.assertEqual(result["metaAnnotations"], [])
+            self.assertEqual(result["hypotheses"], self.base["hypotheses"])
+            self.assertEqual(result["graph"], self.base["graph"])
+            self.assertTrue(result["inference"]["metaCalled"])
+            self.assertTrue(result["inference"]["metaCompleted"])
+            self.assertFalse(result["inference"]["metaAccepted"])
+
+    def test_untrusted_output_schema_and_direction_controls_fail_closed(self):
+        invalid = [
+            _mock_annotations([{"label": "Bidi \u202e spoof", "citations": ["e1", "e2"]}]),
+            _mock_annotations([{"label": "Some remote note", "citations": ["e1", "e2"]}], finish="length"),
+            _mock_annotations([{"label": "Some remote note", "citations": ["e1", "e2"]}], finish=None),
+            _mock_annotations([{"label": "Some remote note", "citations": ["e1", "e9"]}]),
+            _mock_annotations([{"label": "Some remote note", "citations": ["e1", "e2"]}] * 3),
+            {"choices": [{"finish_reason": "stop", "message": {"content": json.dumps({
+                "annotations": [{"label": "Valid note", "citations": ["e1", "e2"]}],
+                "graph": {"edges": [{"source": "e1", "target": "h-fake"}]},
+            })}}]},
+        ]
+        for response in invalid:
+            with self.subTest(response=response), patch.dict(os.environ, self.flags), patch(
+                "demo.meta_provider._request_json", return_value=response
+            ), patch("demo.meta_provider._calls_made", 0):
+                result = enrich(self.case, copy.deepcopy(self.base))
+                self.assertEqual(result["metaAnnotations"], [])
+                self.assertEqual(result["graph"], self.base["graph"])
+                self.assertEqual(result["hypotheses"], self.base["hypotheses"])
+                self.assertTrue(result["inference"]["metaCompleted"])
+                self.assertFalse(result["inference"]["metaAccepted"])
+
     def test_hallucinated_references_rejected(self):
-        invalid = {"choices": [{"finish_reason": "stop", "message": {"content": json.dumps({"hypotheses": [
-            {"label": "Unknown source", "supportingEvidenceIds": ["invented"]}
-        ]})}}]}
+        invalid = _mock_annotations([{"label": "Unknown source", "citations": ["invented", "e2"]}])
         with patch.dict(os.environ, self.flags), patch("demo.meta_provider._request_json", return_value=invalid):
             result = enrich(self.case, copy.deepcopy(self.base))
         self.assertEqual(result["inference"]["mode"], "deterministic-offline-demo")
@@ -63,7 +113,12 @@ class MetaProviderTests(unittest.TestCase):
     def test_network_exception_fails_closed(self):
         with patch.dict(os.environ, self.flags), patch("demo.meta_provider._request_json", side_effect=TimeoutError):
             result = enrich(self.case, copy.deepcopy(self.base))
-        self.assertEqual(result, self.base)
+        self.assertEqual(result["graph"], self.base["graph"])
+        self.assertEqual(result["hypotheses"], self.base["hypotheses"])
+        self.assertTrue(result["inference"]["metaCalled"])
+        self.assertFalse(result["inference"]["metaCompleted"])
+        self.assertFalse(result["inference"]["metaAccepted"])
+        self.assertEqual(result["metaAnnotations"], [])
 
     def test_never_send_unapproved_case(self):
         with patch.dict(os.environ, self.flags), patch("demo.meta_provider._request_json") as send:

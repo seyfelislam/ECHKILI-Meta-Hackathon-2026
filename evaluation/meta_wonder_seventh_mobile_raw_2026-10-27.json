@@ -1,0 +1,98 @@
+{
+  "decision": "Prefer B: mobile-first vertical relationship cards at small widths, with the SVG retained only as an optional desktop enhancement. B preserves the exact synthetic graph in testable DOM order, avoids horizontal panning and complex mobile graph routing, works with 200% zoom and RTL, and makes relation type, provisional status, and withdrawal readable without color. A remains acceptable on desktop but is a burden on 360px phones.",
+  "mobileSpec": [
+    {
+      "id": "M1",
+      "change": "Below the desktop breakpoint, replace the 760px-min-width pannable SVG with a single-column card stack; keep SVG desktop-only.",
+      "behavior": "At 360px, cards fit the viewport with no horizontal page scrolling or pan region."
+    },
+    {
+      "id": "M2",
+      "change": "Render each relation as one card with explicit source, relation word, and target in DOM order.",
+      "behavior": "Users read, for example, Record B - SUPPORTS - provisional explanation, without interpreting lines, dashes, position, or color."
+    },
+    {
+      "id": "M3",
+      "change": "Give SUPPORTS and CONTRADICTS distinct text labels plus a non-color icon/shape and wording.",
+      "behavior": "Relation meaning survives grayscale, color-vision differences, zoom, and screen-reader use."
+    },
+    {
+      "id": "M4",
+      "change": "List nodes before relations: e1/e2/e3/e4 as Record A/B/C/D, h2 marked Provisional, and HUMAN_REVIEW shown as a global state banner.",
+      "behavior": "At 360px, status is visible as text and is not inferred from placement or color; no final diagnosis is presented."
+    },
+    {
+      "id": "M5",
+      "change": "Place h1 in a separate Withdrawn section with a visible Withdrawn label and muted/strikethrough styling as a secondary cue.",
+      "behavior": "h1 is discoverable but has no card, chip, line, link, or relation wording connecting it to any node."
+    },
+    {
+      "id": "M6",
+      "change": "For Arabic, set prose dir=rtl while isolating technical IDs such as e1 and h2 as LTR with bdi/unicode isolation; keep DOM order source-relation-target.",
+      "behavior": "Arabic reading flows right-to-left, IDs remain intact and in the correct logical position, and meaning does not depend on visual reversal."
+    },
+    {
+      "id": "M7",
+      "change": "Use fluid widths, wrapping long labels, and one shared data source for cards, transcript, and desktop SVG.",
+      "behavior": "Long localized labels wrap at 360px and at 200% zoom; mobile and desktop cannot diverge or invent different edges."
+    }
+  ],
+  "tests": [
+    {
+      "id": "T1",
+      "setup": "Load the panel at 360px CSS width in English, French, and Arabic with default synthetic data.",
+      "expected": "document scrollWidth does not exceed the viewport; there is no horizontal page overflow and no mobile horizontal scroll region."
+    },
+    {
+      "id": "T2",
+      "setup": "Render the default synthetic graph on mobile.",
+      "expected": "Exactly three relation cards exist: e2 SUPPORTS h2, e3 SUPPORTS h2, and e1 CONTRADICTS e4; no other source-relation-target combination is shown."
+    },
+    {
+      "id": "T3",
+      "setup": "Render the default graph and inspect the h1 area visually, in the DOM, and with a screen reader.",
+      "expected": "h1 is visibly and programmatically labeled Withdrawn, appears outside the active relations, and has zero relation cards, links, or connectors."
+    },
+    {
+      "id": "T4",
+      "setup": "Switch to Arabic RTL and read the e1 CONTRADICTS e4 and e2 SUPPORTS h2 cards visually and in DOM/screen-reader order.",
+      "expected": "Reading order remains source, relation, target; e1 and h2 render as isolated LTR IDs in the correct logical slots despite RTL prose."
+    },
+    {
+      "id": "T5",
+      "setup": "Render the panel with nodes present but an empty relations array.",
+      "expected": "Zero relation cards, lines, or placeholder edges appear; an explicit no-relations/empty state is shown instead."
+    },
+    {
+      "id": "T6",
+      "setup": "At 360px, increase text zoom to 200% with the longest localized labels enabled.",
+      "expected": "Text wraps without clipping, overlap, truncated relation words, or horizontal page overflow, and all cards remain reachable by vertical scrolling."
+    },
+    {
+      "id": "T7",
+      "setup": "Navigate the mobile panel by keyboard only and compare available actions and content with the desktop view.",
+      "expected": "Focus order matches DOM reading order, focus is visible, there is no scroll-region trap, and no content or action is available only in the SVG."
+    },
+    {
+      "id": "T8",
+      "setup": "Use a screen reader on mobile in Arabic and English and step through nodes, HUMAN_REVIEW, relations, and h1.",
+      "expected": "Each item announces the same source, relation word, target, provisional/withdrawn status, and global review state conveyed visually, without relying on color, dash style, or position."
+    }
+  ],
+  "safeguards": [
+    "Educational synthetic example only: this is not a validated diagnostic system and must not be presented as establishing a real cause or final diagnosis.",
+    "Only the three listed relations exist; contradictory evidence, including e1 CONTRADICTS e4, cannot establish a cause, and no edge may be inferred from proximity, color, or ordering.",
+    "h1 is withdrawn and must remain unconnected; h2 remains provisional and the global state remains HUMAN_REVIEW.",
+    "Do not add complex mobile graph routing, inferred edges, or hidden SVG-only meaning; if a relation cannot be stated as explicit source-relation-target text, omit it rather than inventing it."
+  ],
+  "tradeoffs": {
+    "optionA": {
+      "advantages": "Preserves the spatial two-column graph, reuses the existing desktop SVG and transcript, and requires the smallest visual change.",
+      "disadvantages": "Requires horizontal panning inside a focusable scroll region at 360px, makes discovery and zoom harder, depends more on geometry and transcript duplication, and is harder to test reliably for RTL and reflow."
+    },
+    "optionB": {
+      "advantages": "Linear, DOM-testable, naturally RTL-friendly, resilient at 200% zoom, explicit without color, and removes mobile routing and pan complexity.",
+      "disadvantages": "Loses the at-a-glance spatial graph overview, can require more vertical scrolling, and needs a shared data source and parity tests so cards, transcript, and desktop SVG do not diverge."
+    }
+  }
+}

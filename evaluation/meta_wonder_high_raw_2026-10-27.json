@@ -1,0 +1,647 @@
+{
+  "tests": [
+    {
+      "id": "t01",
+      "kind": "ACCEPT",
+      "selected_evidence": [
+        "e1",
+        "e2",
+        "e3",
+        "e4",
+        "e5"
+      ],
+      "hypotheses": [
+        {
+          "id": "h1",
+          "label": "Alpha",
+          "supportingEvidenceIds": [
+            "e1",
+            "e4"
+          ]
+        },
+        {
+          "id": "h2",
+          "label": "Beta",
+          "supportingEvidenceIds": [
+            "e4",
+            "e5"
+          ]
+        }
+      ],
+      "contradictions": [
+        [
+          "e1",
+          "e2"
+        ],
+        [
+          "e2",
+          "e3"
+        ]
+      ],
+      "expected_state": "HUMAN_REVIEW",
+      "expected_active_hypotheses": [
+        "h2"
+      ],
+      "expected_support_edges": [
+        [
+          "e4",
+          "h2"
+        ],
+        [
+          "e5",
+          "h2"
+        ]
+      ],
+      "expected_contradiction_edges": [
+        [
+          "e1",
+          "e2"
+        ],
+        [
+          "e2",
+          "e3"
+        ]
+      ],
+      "expected_error_class": null,
+      "invariant": "Overlapping contradictions withdraw any hypothesis citing any endpoint; clean hypotheses remain but state stays HUMAN_REVIEW.",
+      "status": "CONTRACT_REQUIRED"
+    },
+    {
+      "id": "t02",
+      "kind": "REJECT",
+      "selected_evidence": [
+        "e1",
+        "e2",
+        "e3",
+        "e4"
+      ],
+      "hypotheses": [
+        {
+          "id": "h1",
+          "label": "Alpha",
+          "supportingEvidenceIds": [
+            "e3",
+            "e4"
+          ]
+        }
+      ],
+      "contradictions": [
+        [
+          "e1",
+          "e2"
+        ],
+        [
+          "e2",
+          "e1"
+        ]
+      ],
+      "expected_state": "REJECT",
+      "expected_active_hypotheses": [],
+      "expected_support_edges": [],
+      "expected_contradiction_edges": [],
+      "expected_error_class": "ValueError",
+      "invariant": "Reversed duplicate contradiction is malformed and must not be silently deduplicated or normalized.",
+      "status": "CONTRACT_REQUIRED"
+    },
+    {
+      "id": "t03",
+      "kind": "ACCEPT",
+      "selected_evidence": [
+        "e1",
+        "e2",
+        "e3"
+      ],
+      "hypotheses": [],
+      "contradictions": [
+        [
+          "e1",
+          "e2"
+        ]
+      ],
+      "expected_state": "HUMAN_REVIEW",
+      "expected_active_hypotheses": [],
+      "expected_support_edges": [],
+      "expected_contradiction_edges": [
+        [
+          "e1",
+          "e2"
+        ]
+      ],
+      "expected_error_class": null,
+      "invariant": "A contradiction alone forces HUMAN_REVIEW and remains traceable even with no hypothesis.",
+      "status": "CONTRACT_REQUIRED"
+    },
+    {
+      "id": "t04",
+      "kind": "ACCEPT",
+      "selected_evidence": [
+        "e1",
+        "e2",
+        "e3",
+        "e4",
+        "e5"
+      ],
+      "hypotheses": [
+        {
+          "id": "h1",
+          "label": "Alpha",
+          "supportingEvidenceIds": [
+            "e3",
+            "e4"
+          ]
+        },
+        {
+          "id": "h2",
+          "label": "Beta",
+          "supportingEvidenceIds": [
+            "e3",
+            "e5"
+          ]
+        }
+      ],
+      "contradictions": [
+        [
+          "e1",
+          "e2"
+        ]
+      ],
+      "expected_state": "HUMAN_REVIEW",
+      "expected_active_hypotheses": [
+        "h1",
+        "h2"
+      ],
+      "expected_support_edges": [
+        [
+          "e3",
+          "h1"
+        ],
+        [
+          "e4",
+          "h1"
+        ],
+        [
+          "e3",
+          "h2"
+        ],
+        [
+          "e5",
+          "h2"
+        ]
+      ],
+      "expected_contradiction_edges": [
+        [
+          "e1",
+          "e2"
+        ]
+      ],
+      "expected_error_class": null,
+      "invariant": "Two competing hypotheses wholly on nonconflicted evidence may both remain visible under HUMAN_REVIEW.",
+      "status": "CONTRACT_REQUIRED"
+    },
+    {
+      "id": "t05",
+      "kind": "TRANSITION",
+      "before_selected_evidence": [
+        "e1",
+        "e2",
+        "e3"
+      ],
+      "before_contradictions": [],
+      "selected_evidence": [
+        "e1",
+        "e3"
+      ],
+      "hypotheses": [],
+      "contradictions": [],
+      "expected_state": "ABSTAIN",
+      "expected_active_hypotheses": [],
+      "expected_support_edges": [],
+      "expected_contradiction_edges": [],
+      "expected_error_class": null,
+      "invariant": "Removing e2 drops a prior hypothesis below two supports; caller withdraws it, yielding ABSTAIN rather than a weakened PROVISIONAL.",
+      "status": "CONTRACT_REQUIRED"
+    },
+    {
+      "id": "t06",
+      "kind": "REJECT",
+      "selected_evidence": [
+        "e1",
+        "e2"
+      ],
+      "hypotheses": [
+        {
+          "id": "",
+          "label": "Alpha",
+          "supportingEvidenceIds": [
+            "e1",
+            "e2"
+          ]
+        }
+      ],
+      "contradictions": [],
+      "expected_state": "REJECT",
+      "expected_active_hypotheses": [],
+      "expected_support_edges": [],
+      "expected_contradiction_edges": [],
+      "expected_error_class": "ValueError",
+      "invariant": "Empty hypothesis ID is malformed and cannot create an addressable hypothesis.",
+      "status": "CONTRACT_REQUIRED"
+    },
+    {
+      "id": "t07",
+      "kind": "REJECT",
+      "selected_evidence": [
+        "e1",
+        "E1",
+        "e2"
+      ],
+      "hypotheses": [
+        {
+          "id": "h1",
+          "label": "Alpha",
+          "supportingEvidenceIds": [
+            "e1",
+            "e2"
+          ]
+        }
+      ],
+      "contradictions": [],
+      "expected_state": "REJECT",
+      "expected_active_hypotheses": [],
+      "expected_support_edges": [],
+      "expected_contradiction_edges": [],
+      "expected_error_class": "ValueError",
+      "invariant": "Mixed-case IDs that collide under case-insensitive handling must not be treated as safely distinct sources.",
+      "status": "PROPOSED_HARDENING"
+    },
+    {
+      "id": "t08",
+      "kind": "REJECT",
+      "selected_evidence": [
+        "e1",
+        "e2"
+      ],
+      "hypotheses": [
+        {
+          "id": "h1",
+          "label": "Alpha",
+          "supportingEvidenceIds": [
+            "e1",
+            "e2"
+          ]
+        }
+      ],
+      "contradictions": [
+        [
+          "e1",
+          "e1"
+        ]
+      ],
+      "expected_state": "REJECT",
+      "expected_active_hypotheses": [],
+      "expected_support_edges": [],
+      "expected_contradiction_edges": [],
+      "expected_error_class": "ValueError",
+      "invariant": "Self-contradiction lacks two distinct selected endpoints.",
+      "status": "CONTRACT_REQUIRED"
+    },
+    {
+      "id": "t09",
+      "kind": "REJECT",
+      "selected_evidence": [
+        {
+          "id": "e1",
+          "title": "Alpha"
+        },
+        {
+          "id": "e1",
+          "title": "Alpha alias"
+        },
+        {
+          "id": "e2",
+          "title": "Beta"
+        }
+      ],
+      "hypotheses": [
+        {
+          "id": "h1",
+          "label": "Alpha",
+          "supportingEvidenceIds": [
+            "e1",
+            "e2"
+          ]
+        }
+      ],
+      "contradictions": [],
+      "expected_state": "REJECT",
+      "expected_active_hypotheses": [],
+      "expected_support_edges": [],
+      "expected_contradiction_edges": [],
+      "expected_error_class": "ValueError",
+      "invariant": "Different titles for the same evidence ID are not independent sources; duplicate evidence IDs reject.",
+      "status": "CONTRACT_REQUIRED"
+    },
+    {
+      "id": "t10",
+      "kind": "REJECT",
+      "selected_evidence": [
+        123,
+        "e1",
+        "e2"
+      ],
+      "hypotheses": [
+        {
+          "id": "h1",
+          "label": "Alpha",
+          "supportingEvidenceIds": [
+            "e1",
+            "e2"
+          ]
+        }
+      ],
+      "contradictions": [],
+      "expected_state": "REJECT",
+      "expected_active_hypotheses": [],
+      "expected_support_edges": [],
+      "expected_contradiction_edges": [],
+      "expected_error_class": "ValueError",
+      "invariant": "Non-string evidence IDs are malformed and must safely reject without coercion to string.",
+      "status": "PROPOSED_HARDENING"
+    },
+    {
+      "id": "t11",
+      "kind": "REJECT",
+      "selected_evidence": [
+        "e1",
+        "e2",
+        "e3"
+      ],
+      "hypotheses": [
+        {
+          "id": "h1",
+          "label": "Alpha",
+          "supportingEvidenceIds": [
+            "e1",
+            null
+          ]
+        }
+      ],
+      "contradictions": [],
+      "expected_state": "REJECT",
+      "expected_active_hypotheses": [],
+      "expected_support_edges": [],
+      "expected_contradiction_edges": [],
+      "expected_error_class": "ValueError",
+      "invariant": "Non-string supporting evidence IDs are malformed and must safely reject without coercion or omission.",
+      "status": "PROPOSED_HARDENING"
+    },
+    {
+      "id": "t12",
+      "kind": "REJECT",
+      "selected_evidence": [
+        "e1",
+        "e2"
+      ],
+      "hypotheses": [
+        {
+          "id": "h1",
+          "label": "Alpha",
+          "supportingEvidenceIds": [
+            "e1",
+            "e2"
+          ]
+        },
+        {
+          "id": "h1",
+          "label": "Alpha",
+          "supportingEvidenceIds": [
+            "e1",
+            "e2"
+          ]
+        }
+      ],
+      "contradictions": [],
+      "expected_state": "REJECT",
+      "expected_active_hypotheses": [],
+      "expected_support_edges": [],
+      "expected_contradiction_edges": [],
+      "expected_error_class": "ValueError",
+      "invariant": "Duplicate hypothesis IDs/entries must reject rather than merge or double-count support.",
+      "status": "CONTRACT_REQUIRED"
+    },
+    {
+      "id": "t13",
+      "kind": "TRANSITION",
+      "before_selected_evidence": [
+        "e1",
+        "e2",
+        "e3"
+      ],
+      "before_contradictions": [],
+      "selected_evidence": [
+        "e3",
+        "e1",
+        "e2"
+      ],
+      "hypotheses": [
+        {
+          "id": "h1",
+          "label": "Alpha",
+          "supportingEvidenceIds": [
+            "e1",
+            "e2"
+          ]
+        }
+      ],
+      "contradictions": [],
+      "expected_state": "PROVISIONAL",
+      "expected_active_hypotheses": [
+        "h1"
+      ],
+      "expected_support_edges": [
+        [
+          "e1",
+          "h1"
+        ],
+        [
+          "e2",
+          "h1"
+        ]
+      ],
+      "expected_contradiction_edges": [],
+      "expected_error_class": null,
+      "invariant": "Permuting selected evidence order does not change state, active hypotheses, or support-edge set.",
+      "status": "CONTRACT_REQUIRED"
+    },
+    {
+      "id": "t14",
+      "kind": "ACCEPT",
+      "selected_evidence": [
+        "e1",
+        "e2",
+        "e3",
+        "e4"
+      ],
+      "hypotheses": [
+        {
+          "id": "h1",
+          "label": "Alpha",
+          "supportingEvidenceIds": [
+            "e1",
+            "e3",
+            "e4"
+          ]
+        },
+        {
+          "id": "h2",
+          "label": "Beta",
+          "supportingEvidenceIds": [
+            "e3",
+            "e4"
+          ]
+        }
+      ],
+      "contradictions": [
+        [
+          "e1",
+          "e2"
+        ]
+      ],
+      "expected_state": "HUMAN_REVIEW",
+      "expected_active_hypotheses": [
+        "h2"
+      ],
+      "expected_support_edges": [
+        [
+          "e3",
+          "h2"
+        ],
+        [
+          "e4",
+          "h2"
+        ]
+      ],
+      "expected_contradiction_edges": [
+        [
+          "e1",
+          "e2"
+        ]
+      ],
+      "expected_error_class": null,
+      "invariant": "Citing either contradiction endpoint withdraws a hypothesis even if it also has two clean supports.",
+      "status": "CONTRACT_REQUIRED"
+    },
+    {
+      "id": "t15",
+      "kind": "REJECT",
+      "selected_evidence": [
+        "e1",
+        "e2",
+        "e3"
+      ],
+      "hypotheses": [
+        {
+          "id": "h1",
+          "label": "Alpha",
+          "supportingEvidenceIds": [
+            "e1",
+            "e2"
+          ]
+        }
+      ],
+      "contradictions": [
+        [
+          "e1",
+          "e5"
+        ]
+      ],
+      "expected_state": "REJECT",
+      "expected_active_hypotheses": [],
+      "expected_support_edges": [],
+      "expected_contradiction_edges": [],
+      "expected_error_class": "ValueError",
+      "invariant": "Contradiction endpoints must both be actually selected evidence.",
+      "status": "CONTRACT_REQUIRED"
+    },
+    {
+      "id": "t16",
+      "kind": "REJECT",
+      "selected_evidence": [
+        "e1",
+        "e2"
+      ],
+      "hypotheses": [
+        {
+          "id": 123,
+          "label": "Alpha",
+          "supportingEvidenceIds": [
+            "e1",
+            "e2"
+          ]
+        }
+      ],
+      "contradictions": [],
+      "expected_state": "REJECT",
+      "expected_active_hypotheses": [],
+      "expected_support_edges": [],
+      "expected_contradiction_edges": [],
+      "expected_error_class": "ValueError",
+      "invariant": "Non-string hypothesis IDs are malformed and must safely reject without coercion.",
+      "status": "PROPOSED_HARDENING"
+    }
+  ],
+  "candidate_invariants": [
+    "Every SUPPORTS edge cites a distinct, actually selected evidence ID.",
+    "A provisional hypothesis requires at least two distinct selected supports.",
+    "Any valid contradiction forces HUMAN_REVIEW regardless of remaining clean hypotheses.",
+    "A hypothesis citing either contradiction endpoint is withdrawn; clean hypotheses remain visible only.",
+    "Contradiction edges remain traceable even when no hypothesis is active.",
+    "Duplicate, reversed-duplicate, self, unknown-endpoint, and duplicate-ID inputs reject rather than normalize.",
+    "Permuting evidence order preserves state and edge sets.",
+    "Malformed non-string IDs reject with ValueError and produce no partial graph."
+  ],
+  "priority_fixes": [
+    {
+      "id": "p1",
+      "fix": "Add strict type checks for evidence, hypothesis, and supporting IDs before any coercion or lookup.",
+      "tests": [
+        "t10",
+        "t11",
+        "t16"
+      ]
+    },
+    {
+      "id": "p2",
+      "fix": "Reject duplicate evidence IDs, duplicate hypothesis IDs, and case-colliding IDs explicitly.",
+      "tests": [
+        "t07",
+        "t09",
+        "t12"
+      ]
+    },
+    {
+      "id": "p3",
+      "fix": "Validate contradictions as two distinct selected IDs and reject reversed duplicates.",
+      "tests": [
+        "t02",
+        "t08",
+        "t15"
+      ]
+    },
+    {
+      "id": "p4",
+      "fix": "Ensure endpoint-based withdrawal applies even when a hypothesis has additional clean supports.",
+      "tests": [
+        "t01",
+        "t14"
+      ]
+    },
+    {
+      "id": "p5",
+      "fix": "Document caller-level withdrawal after evidence removal drops support below two.",
+      "tests": [
+        "t05"
+      ]
+    }
+  ]
+}

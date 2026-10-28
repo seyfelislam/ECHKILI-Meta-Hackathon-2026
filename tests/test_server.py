@@ -81,6 +81,24 @@ class DemoHTTPTests(unittest.TestCase):
             with self.subTest(path=path), self.assertRaises(HTTPError):
                 self.fetch(path)
 
+    def test_graph_locale_module_is_served_as_javascript(self):
+        response, body = self.fetch("/graph-i18n.js")
+        self.assertEqual(response.status, 200)
+        self.assertEqual(response.headers["Content-Type"], "text/javascript; charset=utf-8")
+        self.assertGreater(len(body), 100)
+
+    def test_result_locale_module_is_served_as_javascript(self):
+        response, body = self.fetch("/result-i18n.js")
+        self.assertEqual(response.status, 200)
+        self.assertEqual(response.headers["Content-Type"], "text/javascript; charset=utf-8")
+        self.assertGreater(len(body), 100)
+
+    def test_site_locale_module_is_served_as_javascript(self):
+        response, body = self.fetch("/site-i18n.js")
+        self.assertEqual(response.status, 200)
+        self.assertEqual(response.headers["Content-Type"], "text/javascript; charset=utf-8")
+        self.assertGreater(len(body), 100)
+
 
 if __name__ == "__main__":
     unittest.main()

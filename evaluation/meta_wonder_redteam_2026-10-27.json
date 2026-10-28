@@ -1,0 +1,75 @@
+{
+  "source": "Muse Wonder 1.0, Meta Model API Playground, 2026-10-27",
+  "scope": "Public synthetic ECHKILI Evidence Lab graph contract only; no vehicle/customer/proprietary data",
+  "tests": [
+    {
+      "id": "t01_valid_insufficient_support_abstains", "kind": "VALID",
+      "selected_evidence": ["e1"], "hypotheses": [{"id": "h1", "supports": ["e1"]}], "contradictions": [],
+      "expected_state": "ABSTAIN", "expected_active_hypotheses": [], "expected_withdrawn_hypotheses": [],
+      "expected_error_keyword": null, "invariant": "One distinct support is below the two-support threshold."
+    },
+    {
+      "id": "t02_valid_supported_provisional", "kind": "VALID",
+      "selected_evidence": ["e1", "e2"], "hypotheses": [{"id": "h1", "supports": ["e1", "e2"]}], "contradictions": [],
+      "expected_state": "PROVISIONAL", "expected_active_hypotheses": ["h1"], "expected_withdrawn_hypotheses": [],
+      "expected_error_keyword": null, "invariant": "Two distinct selected supports activate h1."
+    },
+    {
+      "id": "t03_valid_contradiction_unaffected_remains", "kind": "VALID",
+      "selected_evidence": ["e1", "e2", "e3", "e4"],
+      "hypotheses": [{"id": "h1", "supports": ["e1", "e2"]}, {"id": "h2", "supports": ["e3", "e4"]}],
+      "contradictions": [["e1", "e2"]], "expected_state": "HUMAN_REVIEW",
+      "expected_active_hypotheses": ["h2"], "expected_withdrawn_hypotheses": ["h1"],
+      "expected_error_keyword": null,
+      "invariant": "A conflict withdraws only its citing hypothesis but HUMAN_REVIEW overrides the unaffected active hypothesis."
+    },
+    {
+      "id": "t04_reject_unknown_reference", "kind": "REJECT",
+      "selected_evidence": ["e1", "e2"], "hypotheses": [{"id": "h1", "supports": ["e1", "e9"]}], "contradictions": [],
+      "expected_state": "REJECT", "expected_active_hypotheses": [], "expected_withdrawn_hypotheses": [],
+      "expected_error_keyword": "UNKNOWN_REFERENCE", "invariant": "References outside e1-e4 are rejected."
+    },
+    {
+      "id": "t05_reject_dangling_citation", "kind": "REJECT",
+      "selected_evidence": ["e1"], "hypotheses": [{"id": "h1", "supports": ["e1", "e2"]}], "contradictions": [],
+      "expected_state": "REJECT", "expected_active_hypotheses": [], "expected_withdrawn_hypotheses": [],
+      "expected_error_keyword": "DANGLING_CITATION", "invariant": "Every cited evidence ID must be actually selected."
+    },
+    {
+      "id": "t06_reject_duplicate_selected_evidence", "kind": "REJECT",
+      "selected_evidence": ["e1", "e1", "e2"], "hypotheses": [{"id": "h1", "supports": ["e1", "e2"]}], "contradictions": [],
+      "expected_state": "REJECT", "expected_active_hypotheses": [], "expected_withdrawn_hypotheses": [],
+      "expected_error_keyword": "DUPLICATE_SELECTED", "invariant": "Selected evidence IDs must not repeat."
+    },
+    {
+      "id": "t07_reject_repeated_support_evidence", "kind": "REJECT",
+      "selected_evidence": ["e1", "e2"], "hypotheses": [{"id": "h1", "supports": ["e1", "e1"]}], "contradictions": [],
+      "expected_state": "REJECT", "expected_active_hypotheses": [], "expected_withdrawn_hypotheses": [],
+      "expected_error_keyword": "DUPLICATE_SUPPORT", "invariant": "Repeated supports do not count as two distinct supports."
+    },
+    {
+      "id": "t08_transition_evidence_removal_below_threshold", "kind": "TRANSITION",
+      "before_selected_evidence": ["e1", "e2"], "before_contradictions": [],
+      "selected_evidence": ["e1"], "hypotheses": [{"id": "h1", "supports": ["e1"]}], "contradictions": [],
+      "expected_state": "ABSTAIN", "expected_active_hypotheses": [], "expected_withdrawn_hypotheses": ["h1"],
+      "expected_error_keyword": null, "invariant": "Removing a cited ID drops h1 below threshold and returns to ABSTAIN."
+    },
+    {
+      "id": "t09_transition_contradiction_added", "kind": "TRANSITION",
+      "before_selected_evidence": ["e1", "e2", "e3", "e4"], "before_contradictions": [],
+      "selected_evidence": ["e1", "e2", "e3", "e4"],
+      "hypotheses": [{"id": "h1", "supports": ["e1", "e2"]}, {"id": "h2", "supports": ["e3", "e4"]}],
+      "contradictions": [["e3", "e4"]], "expected_state": "HUMAN_REVIEW",
+      "expected_active_hypotheses": ["h1"], "expected_withdrawn_hypotheses": ["h2"],
+      "expected_error_keyword": null, "invariant": "Adding a contradiction forces HUMAN_REVIEW and withdraws only h2."
+    },
+    {
+      "id": "t10_transition_order_independence", "kind": "TRANSITION",
+      "before_selected_evidence": ["e2", "e1"], "before_contradictions": [],
+      "selected_evidence": ["e1", "e2"], "hypotheses": [{"id": "h1", "supports": ["e2", "e1"]}],
+      "contradictions": [], "expected_state": "PROVISIONAL", "expected_active_hypotheses": ["h1"],
+      "expected_withdrawn_hypotheses": [], "expected_error_keyword": null,
+      "invariant": "Evidence and support ordering do not change the outcome."
+    }
+  ]
+}
